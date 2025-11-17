@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Languages } from "lucide-react";
 import {
   Select,
@@ -7,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getTranslation, type Language } from "@/lib/translations";
 
 const languages = [
   { code: "en", name: "English" },
@@ -35,7 +35,7 @@ const LanguageSelector = ({ selectedLanguage, onLanguageChange }: LanguageSelect
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
           <Languages className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold">Choose Your Language</h2>
+        <h2 className="text-lg font-semibold">{getTranslation(selectedLanguage as Language, "chooseLanguage")}</h2>
       </div>
       
       <Select value={selectedLanguage} onValueChange={onLanguageChange}>
