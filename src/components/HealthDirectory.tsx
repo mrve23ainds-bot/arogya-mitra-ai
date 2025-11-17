@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getTranslation, type Language } from "@/lib/translations";
 
 interface HealthDirectoryProps {
   onBack: () => void;
+  language?: string;
 }
 
 // Mock data - in production, this would be fetched from a geo-indexed database
@@ -49,7 +51,7 @@ const healthFacilities = [
   },
 ];
 
-const HealthDirectory = ({ onBack }: HealthDirectoryProps) => {
+const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredFacilities = healthFacilities.filter(
@@ -72,8 +74,8 @@ const HealthDirectory = ({ onBack }: HealthDirectoryProps) => {
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div>
-            <h2 className="text-xl font-semibold">Healthcare Directory</h2>
-            <p className="text-sm text-white/80">Find care near you</p>
+            <h2 className="text-xl font-semibold">{getTranslation(language as Language, "nearbyHealthcare")}</h2>
+            <p className="text-sm text-white/80">{getTranslation(language as Language, "findCare")}</p>
           </div>
         </div>
 
@@ -83,7 +85,7 @@ const HealthDirectory = ({ onBack }: HealthDirectoryProps) => {
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search facilities..."
+            placeholder={getTranslation(language as Language, "searchLocation")}
             className="pl-10 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/60"
           />
         </div>

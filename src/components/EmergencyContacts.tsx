@@ -1,9 +1,11 @@
 import { ArrowLeft, Phone, Ambulance, AlertCircle, Hospital } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getTranslation, type Language } from "@/lib/translations";
 
 interface EmergencyContactsProps {
   onBack: () => void;
+  language?: string;
 }
 
 const emergencyNumbers = [
@@ -41,7 +43,7 @@ const emergencyNumbers = [
   },
 ];
 
-const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
+const EmergencyContacts = ({ onBack, language = "en" }: EmergencyContactsProps) => {
   const handleCall = (number: string) => {
     window.location.href = `tel:${number}`;
   };
@@ -60,8 +62,8 @@ const EmergencyContacts = ({ onBack }: EmergencyContactsProps) => {
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div>
-            <h2 className="text-xl font-semibold">Emergency Contacts</h2>
-            <p className="text-sm text-white/80">Quick access to help</p>
+            <h2 className="text-xl font-semibold">{getTranslation(language as Language, "emergencyContacts")}</h2>
+            <p className="text-sm text-white/80">{getTranslation(language as Language, "emergency")}</p>
           </div>
         </div>
       </div>

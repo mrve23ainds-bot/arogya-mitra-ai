@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VoiceInput from "./VoiceInput";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { getTranslation, type Language } from "@/lib/translations";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,14 +19,19 @@ interface SymptomChatProps {
 }
 
 const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hello! I'm your AI health assistant. Please describe your symptoms, and I'll help you understand what might be happening and what you should do.",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const initialMessage = getTranslation(language as Language, "initialMessage");
+    setMessages([
+      {
+        role: "assistant",
+        content: initialMessage,
+      },
+    ]);
+  }, [language]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -34,81 +41,32 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response - in production, this would call Lovable AI
-    setTimeout(() => {
-      const response = generateHealthResponse(text);
-      setMessages((prev) => [...prev, { role: "assistant", content: response }]);
+    try {
+      const { data, error } = await supabase.functions.invoke("health-assistant", {
+        body: {
+          message: text,
+          language: language,
+          conversationHistory: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.response) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.response },
+        ]);
+      }
+    } catch (error: any) {
+      console.error("Error calling health assistant:", error);
+      toast.error(error.message || "Failed to get response. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
-  };
-
-  const generateHealthResponse = (symptoms: string): string => {
-    // This is a mock response. In production, this would use Lovable AI with proper medical data
-    const lowerSymptoms = symptoms.toLowerCase();
-    
-    if (lowerSymptoms.includes("fever") || lowerSymptoms.includes("temperature")) {
-      return `Based on your symptoms of fever, here's what I recommend:
-
-**Possible Causes:**
-- Viral infection (common cold, flu)
-- Bacterial infection
-- Heat exhaustion
-
-**First Aid:**
-1. Rest and stay hydrated
-2. Take paracetamol (adults: 500-1000mg every 4-6 hours)
-3. Use cold compress on forehead
-4. Monitor temperature every 4 hours
-
-**When to seek immediate care:**
-- Fever above 103°F (39.4°C)
-- Fever lasting more than 3 days
-- Difficulty breathing
-- Severe headache or stiff neck
-
-Would you like me to find nearby healthcare facilities?`;
     }
-    
-    if (lowerSymptoms.includes("headache") || lowerSymptoms.includes("head pain")) {
-      return `I understand you're experiencing headache. Here's guidance:
-
-**Common Causes:**
-- Tension headache
-- Dehydration
-- Eye strain
-- Stress
-
-**Self-Care Steps:**
-1. Rest in a quiet, dark room
-2. Drink plenty of water
-3. Apply cold compress to forehead
-4. Gentle head and neck massage
-
-**Red Flags - Seek immediate care if:**
-- Sudden, severe headache
-- Headache with fever and stiff neck
-- Confusion or difficulty speaking
-- Vision changes
-
-Would you like to describe any other symptoms?`;
-    }
-
-    return `Thank you for sharing your symptoms. I recommend:
-
-1. **Monitor your symptoms** closely
-2. **Stay hydrated** - drink plenty of water
-3. **Rest** adequately
-4. **Consult a healthcare provider** if symptoms worsen
-
-If you're experiencing severe symptoms like:
-- Difficulty breathing
-- Chest pain
-- Severe bleeding
-- Loss of consciousness
-
-Please seek immediate medical attention or call emergency services.
-
-Can you tell me more about your symptoms or how long you've had them?`;
   };
 
   const handleVoiceInput = (transcript: string) => {
@@ -129,8 +87,8 @@ Can you tell me more about your symptoms or how long you've had them?`;
             <ArrowLeft className="h-6 w-6" />
           </Button>
           <div>
-            <h2 className="text-xl font-semibold">Symptom Checker</h2>
-            <p className="text-sm text-white/80">AI Health Assistant</p>
+            <h2 className="text-xl font-semibold">{getTranslation(language as Language, "symptomChecker")}</h2>
+            <p className="text-sm text-white/80">{getTranslation(language as Language, "aiHealthAssistant")}</p>
           </div>
         </div>
       </div>
@@ -172,7 +130,7 @@ Can you tell me more about your symptoms or how long you've had them?`;
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage(input)}
-            placeholder="Type your symptoms..."
+            placeholder={getTranslation(language as Language, "typeSymptoms")}
             className="flex-1 h-12 text-base"
             disabled={isLoading}
           />

@@ -6,6 +6,7 @@ import VoiceInput from "@/components/VoiceInput";
 import SymptomChat from "@/components/SymptomChat";
 import HealthDirectory from "@/components/HealthDirectory";
 import EmergencyContacts from "@/components/EmergencyContacts";
+import { getTranslation, type Language } from "@/lib/translations";
 
 type Screen = "welcome" | "chat" | "directory" | "emergency";
 
@@ -25,10 +26,10 @@ const Index = () => {
                   <MessageSquare className="w-10 h-10 text-white" />
                 </div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  AI Health Sahayak
+                  {getTranslation(selectedLanguage as Language, "appName")}
                 </h1>
                 <p className="text-muted-foreground text-lg">
-                  Your trusted health companion, offline and in your language
+                  {getTranslation(selectedLanguage as Language, "tagline")}
                 </p>
               </div>
 
@@ -46,7 +47,7 @@ const Index = () => {
                   size="lg"
                 >
                   <Mic className="mr-3 h-6 w-6" />
-                  Check Symptoms
+                  {getTranslation(selectedLanguage as Language, "checkSymptoms")}
                 </Button>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -57,7 +58,7 @@ const Index = () => {
                     size="lg"
                   >
                     <MapPin className="mr-2 h-5 w-5" />
-                    Find Care
+                    {getTranslation(selectedLanguage as Language, "findCare")}
                   </Button>
                   <Button 
                     onClick={() => setCurrentScreen("emergency")}
@@ -66,7 +67,7 @@ const Index = () => {
                     size="lg"
                   >
                     <Phone className="mr-2 h-5 w-5" />
-                    Emergency
+                    {getTranslation(selectedLanguage as Language, "emergency")}
                   </Button>
                 </div>
               </div>
@@ -75,15 +76,15 @@ const Index = () => {
               <div className="grid grid-cols-3 gap-3 pt-4">
                 <div className="bg-card rounded-2xl p-4 text-center shadow-soft">
                   <div className="text-2xl font-bold text-primary">100%</div>
-                  <div className="text-xs text-muted-foreground mt-1">Offline</div>
+                  <div className="text-xs text-muted-foreground mt-1">{getTranslation(selectedLanguage as Language, "offline")}</div>
                 </div>
                 <div className="bg-card rounded-2xl p-4 text-center shadow-soft">
                   <div className="text-2xl font-bold text-secondary">12+</div>
-                  <div className="text-xs text-muted-foreground mt-1">Languages</div>
+                  <div className="text-xs text-muted-foreground mt-1">{getTranslation(selectedLanguage as Language, "languages")}</div>
                 </div>
                 <div className="bg-card rounded-2xl p-4 text-center shadow-soft">
-                  <div className="text-2xl font-bold text-accent">Free</div>
-                  <div className="text-xs text-muted-foreground mt-1">Forever</div>
+                  <div className="text-2xl font-bold text-accent">{getTranslation(selectedLanguage as Language, "free")}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{getTranslation(selectedLanguage as Language, "forever")}</div>
                 </div>
               </div>
             </div>
@@ -94,10 +95,10 @@ const Index = () => {
         return <SymptomChat language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
       
       case "directory":
-        return <HealthDirectory onBack={() => setCurrentScreen("welcome")} />;
+        return <HealthDirectory onBack={() => setCurrentScreen("welcome")} language={selectedLanguage} />;
       
       case "emergency":
-        return <EmergencyContacts onBack={() => setCurrentScreen("welcome")} />;
+        return <EmergencyContacts onBack={() => setCurrentScreen("welcome")} language={selectedLanguage} />;
       
       default:
         return null;
