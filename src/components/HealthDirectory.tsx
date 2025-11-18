@@ -84,32 +84,89 @@ const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => 
 const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [facilitiesWithDistance, setFacilitiesWithDistance] = useState<HealthFacility[]>(healthFacilities);
+  const [facilitiesWithDistance, setFacilitiesWithDistance] = useState<HealthFacility[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const { toast } = useToast();
+
+  // Fetch real healthcare facilities from OpenStreetMap
+  const fetchNearbyFacilities = async (coords: Coordinates) => {
+    try {
+      const radius = 5000; // 5km radius
+      const overpassQuery = `
+        [out:json][timeout:25];
+        (
+          node["amenity"="hospital"](around:${radius},${coords.latitude},${coords.longitude});
+          node["amenity"="clinic"](around:${radius},${coords.latitude},${coords.longitude});
+          node["amenity"="doctors"](around:${radius},${coords.latitude},${coords.longitude});
+          node["amenity"="pharmacy"](around:${radius},${coords.latitude},${coords.longitude});
+          way["amenity"="hospital"](around:${radius},${coords.latitude},${coords.longitude});
+          way["amenity"="clinic"](around:${radius},${coords.latitude},${coords.longitude});
+        );
+        out center;
+      `;
+
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: overpassQuery,
+      });
+
+      const data = await response.json();
+      
+      const facilities: HealthFacility[] = data.elements.map((element: any, index: number) => {
+        const lat = element.lat || element.center?.lat || coords.latitude;
+        const lon = element.lon || element.center?.lon || coords.longitude;
+        const facilityCoords = { latitude: lat, longitude: lon };
+        const distance = calculateDistance(coords, facilityCoords);
+        
+        // Determine facility type and services based on amenity
+        let type = "Clinic";
+        let services = ["General Medicine"];
+        
+        if (element.tags?.amenity === "hospital") {
+          type = "Hospital";
+          services = ["Emergency", "ICU", "All Specialties"];
+        } else if (element.tags?.amenity === "pharmacy") {
+          type = "Pharmacy";
+          services = ["Medicines", "Basic Health Products"];
+        } else if (element.tags?.amenity === "doctors") {
+          type = "Doctor";
+          services = ["Consultation", "Basic Treatment"];
+        }
+
+        return {
+          id: element.id || index,
+          name: element.tags?.name || `${type} ${index + 1}`,
+          type,
+          phone: element.tags?.phone || element.tags?.["contact:phone"] || "N/A",
+          services,
+          available: true,
+          coordinates: facilityCoords,
+          distance: `${distance.toFixed(1)} ${getTranslation(language as Language, "km")}`,
+        };
+      }).sort((a, b) => parseFloat(a.distance!) - parseFloat(b.distance!));
+
+      setFacilitiesWithDistance(facilities);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      toast({
+        title: getTranslation(language as Language, "locationError"),
+        description: "Could not fetch nearby facilities. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     // Get user's current location
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const coords: Coordinates = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
           setUserLocation(coords);
-          
-          // Calculate distances and sort by nearest
-          const withDistances = healthFacilities.map(facility => ({
-            ...facility,
-            distance: `${calculateDistance(coords, facility.coordinates).toFixed(1)} ${getTranslation(language as Language, "km")}`,
-          })).sort((a, b) => {
-            const distA = parseFloat(a.distance);
-            const distB = parseFloat(b.distance);
-            return distA - distB;
-          });
-          
-          setFacilitiesWithDistance(withDistances);
+          await fetchNearbyFacilities(coords);
           setIsLoadingLocation(false);
         },
         (error) => {
