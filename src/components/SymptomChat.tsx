@@ -22,6 +22,9 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const ttsRef = useRef<TextToSpeech | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const initialMessage = getTranslation(language as Language, "initialMessage");
