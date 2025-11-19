@@ -13,13 +13,17 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
+    // Detect iOS Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
     if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
       // Map language codes to speech recognition language codes
       const languageMap: Record<string, string> = {
-        en: "en-IN",
+        en: "en-US", // iOS Safari works better with en-US
         hi: "hi-IN",
         bn: "bn-IN",
         te: "te-IN",
@@ -35,8 +39,15 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
-      recognitionInstance.lang = languageMap[language] || "en-IN";
+      recognitionInstance.lang = languageMap[language] || "en-US";
       recognitionInstance.maxAlternatives = 1;
+      
+      // Show warning for iOS Safari with non-English languages
+      if (isIOS && isSafari && language !== "en") {
+        toast.error("iOS Safari has limited support for Indian languages. For best results, use English or try Chrome on Android.", {
+          duration: 5000
+        });
+      }
 
       recognitionInstance.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
