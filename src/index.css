@@ -17,41 +17,41 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    --primary: 210 79% 46%;
+    --primary: 330 81% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 152 57% 45%;
+    --secondary: 340 82% 67%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 330 40% 96%;
+    --muted-foreground: 335 16% 47%;
 
-    --accent: 25 95% 53%;
+    --accent: 320 75% 65%;
     --accent-foreground: 0 0% 100%;
-
+    
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 210 79% 46%;
+    --border: 330 32% 91%;
+    --input: 330 32% 91%;
+    --ring: 330 81% 60%;
 
     --radius: 1rem;
     
     /* Health-specific colors */
-    --health-primary: 210 79% 46%;
-    --health-secondary: 152 57% 45%;
+    --health-primary: 330 81% 60%;
+    --health-secondary: 340 82% 67%;
     --health-emergency: 0 84% 60%;
     --health-success: 142 71% 45%;
     
     /* Gradients */
-    --gradient-health: linear-gradient(135deg, hsl(210 79% 46%) 0%, hsl(152 57% 45%) 100%);
-    --gradient-calm: linear-gradient(180deg, hsl(210 40% 98%) 0%, hsl(210 40% 94%) 100%);
+    --gradient-health: linear-gradient(135deg, hsl(330 81% 60%) 0%, hsl(340 82% 67%) 100%);
+    --gradient-calm: linear-gradient(180deg, hsl(330 40% 98%) 0%, hsl(330 40% 94%) 100%);
     
     /* Shadows */
-    --shadow-soft: 0 2px 12px hsl(210 79% 46% / 0.08);
-    --shadow-medium: 0 4px 24px hsl(210 79% 46% / 0.12);
-    --shadow-strong: 0 8px 32px hsl(210 79% 46% / 0.16);
+    --shadow-soft: 0 2px 12px hsl(330 81% 60% / 0.08);
+    --shadow-medium: 0 4px 24px hsl(330 81% 60% / 0.12);
+    --shadow-strong: 0 8px 32px hsl(330 81% 60% / 0.16);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -84,10 +84,10 @@ All colors MUST be HSL.
     --popover: 215 28% 20%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 79% 46%;
+    --primary: 330 81% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 152 57% 45%;
+    --secondary: 340 82% 67%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 215 28% 25%;
