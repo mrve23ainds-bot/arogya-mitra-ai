@@ -17,19 +17,43 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       const SpeechRecognition = (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
+      // Map language codes to speech recognition language codes
+      const languageMap: Record<string, string> = {
+        en: "en-IN",
+        hi: "hi-IN",
+        bn: "bn-IN",
+        te: "te-IN",
+        ta: "ta-IN",
+        mr: "mr-IN",
+        gu: "gu-IN",
+        kn: "kn-IN",
+        ml: "ml-IN",
+        pa: "pa-IN",
+        or: "or-IN",
+        as: "as-IN",
+      };
+      
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
-      recognitionInstance.lang = language === "en" ? "en-IN" : `${language}-IN`;
+      recognitionInstance.lang = languageMap[language] || "en-IN";
+      recognitionInstance.maxAlternatives = 1;
 
       recognitionInstance.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
+        console.log(`Recognized ${language}:`, transcript);
         onTranscript(transcript);
         setIsListening(false);
       };
 
       recognitionInstance.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
-        toast.error("Could not understand. Please try again.");
+        console.error("Speech recognition error:", event.error, "Language:", language);
+        if (event.error === "no-speech") {
+          toast.error("No speech detected. Please try again.");
+        } else if (event.error === "not-allowed") {
+          toast.error("Microphone access denied. Please allow microphone access.");
+        } else {
+          toast.error("Could not understand. Please try again.");
+        }
         setIsListening(false);
       };
 
