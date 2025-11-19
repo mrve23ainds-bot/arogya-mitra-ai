@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import VoiceInput from "./VoiceInput";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getTranslation, type Language } from "@/lib/translations";
+import { TextToSpeech } from "@/utils/textToSpeech";
 
 interface Message {
   role: "user" | "assistant";
