@@ -73,11 +73,7 @@ const Index = () => {
               </div>
 
               {/* Info Cards */}
-              <div className="grid grid-cols-3 gap-3 pt-4">
-                <div className="bg-card rounded-2xl p-4 text-center shadow-soft">
-                  <div className="text-2xl font-bold text-primary">100%</div>
-                  <div className="text-xs text-muted-foreground mt-1">{getTranslation(selectedLanguage as Language, "offline")}</div>
-                </div>
+              <div className="grid grid-cols-2 gap-3 pt-4">
                 <div className="bg-card rounded-2xl p-4 text-center shadow-soft">
                   <div className="text-2xl font-bold text-secondary">12+</div>
                   <div className="text-xs text-muted-foreground mt-1">{getTranslation(selectedLanguage as Language, "languages")}</div>
