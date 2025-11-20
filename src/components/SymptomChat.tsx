@@ -46,6 +46,10 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
     setIsLoading(true);
 
     try {
+      // Get nearby hospitals from localStorage
+      const nearbyHospitals = JSON.parse(localStorage.getItem('nearbyHospitals') || '[]');
+      const userLocation = JSON.parse(localStorage.getItem('userLocation') || 'null');
+
       const { data, error } = await supabase.functions.invoke("health-assistant", {
         body: {
           message: text,
@@ -53,7 +57,9 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
           conversationHistory: messages.map(msg => ({
             role: msg.role,
             content: msg.content
-          }))
+          })),
+          nearbyHospitals: nearbyHospitals.slice(0, 2), // Send top 2 hospitals
+          userLocation: userLocation
         },
       });
 

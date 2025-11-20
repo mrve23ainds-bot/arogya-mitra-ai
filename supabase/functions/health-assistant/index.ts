@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, language, conversationHistory } = await req.json();
+    const { message, language, conversationHistory, nearbyHospitals, userLocation } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -19,6 +19,15 @@ serve(async (req) => {
     }
 
     console.log("Processing health query in language:", language);
+    console.log("Nearby hospitals:", nearbyHospitals);
+
+    // Build hospital context
+    let hospitalContext = "";
+    if (nearbyHospitals && nearbyHospitals.length > 0) {
+      hospitalContext = `\n\nNearby hospitals available to the user:\n${nearbyHospitals.map((h: any, i: number) => 
+        `${i + 1}. ${h.name} (${h.distance} away) - Services: ${h.services.join(', ')}`
+      ).join('\n')}`;
+    }
 
     // Build conversation context
     const messages = [
@@ -35,10 +44,11 @@ CRITICAL INSTRUCTIONS:
   1. Possible causes
   2. First aid steps
   3. When to seek immediate care
-  4. ALWAYS suggest 2 relevant hospital departments/specialists at the end (e.g., "Recommended: Visit General Medicine or Emergency Department")
+  4. ALWAYS suggest the 2 nearest hospitals from the list below at the end of your response
 - Use bullet points and clear formatting
 - Be compassionate and reassuring
 - Prioritize safety - always recommend professional care when serious
+${hospitalContext}
 
 Base your responses on reliable health information from WHO, government health departments, and medical guidelines.`
       },
