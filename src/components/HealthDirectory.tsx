@@ -29,64 +29,6 @@ interface HealthFacility {
   coordinates: Coordinates;
 }
 
-// Mock data with real coordinates
-const healthFacilities: HealthFacility[] = [
-  {
-    id: 1,
-    name: "District Hospital",
-    type: "Hospital",
-    phone: "0422-2567890",
-    services: ["Emergency", "ICU", "All Specialties"],
-    available: true,
-    coordinates: { latitude: 11.0041, longitude: 76.9678 },
-  },
-  {
-    id: 2,
-    name: "Community Health Centre",
-    type: "Hospital",
-    phone: "0422-2456789",
-    services: ["Pediatrics", "Maternity", "Surgery"],
-    available: true,
-    coordinates: { latitude: 11.0271, longitude: 76.9634 },
-  },
-  {
-    id: 3,
-    name: "Apollo Pharmacy",
-    type: "Medical Store",
-    phone: "0422-2234567",
-    services: ["Medicines", "Health Products"],
-    available: true,
-    coordinates: { latitude: 11.0168, longitude: 76.9558 },
-  },
-  {
-    id: 4,
-    name: "MedPlus Medical Store",
-    type: "Medical Store",
-    phone: "0422-2345678",
-    services: ["Medicines", "Consultation"],
-    available: true,
-    coordinates: { latitude: 11.0200, longitude: 76.9600 },
-  },
-  {
-    id: 5,
-    name: "ASHA Worker - Saraswathi",
-    type: "ASHA Worker",
-    phone: "9876543210",
-    services: ["Home Visits", "Basic Health Advice"],
-    available: true,
-    coordinates: { latitude: 11.0210, longitude: 76.9600 },
-  },
-  {
-    id: 6,
-    name: "ASHA Worker - Lakshmi",
-    type: "ASHA Worker",
-    phone: "9876543211",
-    services: ["Maternal Care", "Child Health"],
-    available: true,
-    coordinates: { latitude: 11.0180, longitude: 76.9620 },
-  },
-];
-
 const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => {
   const R = 6371;
   const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
@@ -106,31 +48,94 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const { toast } = useToast();
 
+  const fetchNearbyFacilities = async (coords: Coordinates) => {
+    try {
+      const radius = 5000; // 5km radius
+      const overpassQuery = `
+        [out:json][timeout:25];
+        (
+          node["amenity"="hospital"](around:${radius},${coords.latitude},${coords.longitude});
+          node["amenity"="clinic"](around:${radius},${coords.latitude},${coords.longitude});
+          node["amenity"="pharmacy"](around:${radius},${coords.latitude},${coords.longitude});
+          node["healthcare"="centre"](around:${radius},${coords.latitude},${coords.longitude});
+        );
+        out body;
+      `;
+
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: overpassQuery,
+      });
+
+      const data = await response.json();
+      const facilities: HealthFacility[] = data.elements.map((element: any, index: number) => {
+        let type: HealthFacility["type"] = "Hospital";
+        let services: string[] = [];
+
+        if (element.tags.amenity === "pharmacy") {
+          type = "Medical Store";
+          services = ["Medicines", "Health Products"];
+        } else if (element.tags.amenity === "hospital" || element.tags.healthcare === "centre") {
+          type = "Hospital";
+          services = ["General Medicine", "Emergency"];
+        } else if (element.tags.amenity === "clinic") {
+          type = "Hospital";
+          services = ["Consultation", "Basic Care"];
+        }
+
+        const facilityCoords = { latitude: element.lat, longitude: element.lon };
+        const distance = calculateDistance(coords, facilityCoords);
+
+        return {
+          id: index,
+          name: element.tags.name || `${type} ${index + 1}`,
+          type,
+          phone: element.tags.phone || element.tags["contact:phone"] || "N/A",
+          services,
+          available: true,
+          coordinates: facilityCoords,
+          distance: `${distance.toFixed(1)} ${getTranslation(language as Language, "km")}`,
+        };
+      });
+
+      const sortedFacilities = facilities.sort((a, b) => {
+        const distA = parseFloat(a.distance || "0");
+        const distB = parseFloat(b.distance || "0");
+        return distA - distB;
+      });
+
+      setFacilitiesWithDistance(sortedFacilities);
+      
+      // Store in localStorage for chat access
+      localStorage.setItem('nearbyHospitals', JSON.stringify(
+        sortedFacilities.filter(f => f.type === "Hospital").slice(0, 5)
+      ));
+      localStorage.setItem('userLocation', JSON.stringify(coords));
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch nearby facilities. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const coords = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           };
           setUserLocation(coords);
-
-          const facilitiesWithDist = healthFacilities.map((facility) => ({
-            ...facility,
-            distance: `${calculateDistance(coords, facility.coordinates).toFixed(1)} ${getTranslation(language as Language, "km")}`,
-          })).sort((a, b) => {
-            const distA = parseFloat(a.distance || "0");
-            const distB = parseFloat(b.distance || "0");
-            return distA - distB;
-          });
-
-          setFacilitiesWithDistance(facilitiesWithDist);
+          await fetchNearbyFacilities(coords);
           setIsLoadingLocation(false);
         },
         (error) => {
           console.error("Geolocation error:", error);
-          setFacilitiesWithDistance(healthFacilities);
+          setFacilitiesWithDistance([]);
           setIsLoadingLocation(false);
           toast({
             title: getTranslation(language as Language, "locationError"),
@@ -140,7 +145,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         }
       );
     } else {
-      setFacilitiesWithDistance(healthFacilities);
+      setFacilitiesWithDistance([]);
       setIsLoadingLocation(false);
       toast({
         title: getTranslation(language as Language, "locationError"),
