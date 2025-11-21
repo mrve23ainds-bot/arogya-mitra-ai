@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,6 +28,12 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Initialize TTS
+    if (!ttsRef.current) {
+      ttsRef.current = new TextToSpeech();
+    }
+    ttsRef.current.setLanguage(language);
+
     const initialMessage = getTranslation(language as Language, "initialMessage");
     setMessages([
       {
@@ -35,6 +41,11 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
         content: initialMessage,
       },
     ]);
+    
+    // Speak initial message
+    setTimeout(() => {
+      ttsRef.current?.speak(initialMessage);
+    }, 500);
   }, [language]);
 
   const handleSendMessage = async (text: string) => {
@@ -66,10 +77,16 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
       if (error) throw error;
 
       if (data?.response) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: data.response },
-        ]);
+        const assistantMessage: Message = { role: "assistant", content: data.response };
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Speak the assistant's response
+        setTimeout(() => {
+          ttsRef.current?.speak(data.response, () => {
+            setIsSpeaking(false);
+          });
+          setIsSpeaking(true);
+        }, 300);
       }
     } catch (error: any) {
       console.error("Error calling health assistant:", error);
@@ -96,10 +113,23 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-semibold">{getTranslation(language as Language, "symptomChecker")}</h2>
             <p className="text-sm text-white/80">{getTranslation(language as Language, "aiHealthAssistant")}</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (ttsRef.current?.isSpeaking()) {
+                ttsRef.current.stop();
+                setIsSpeaking(false);
+              }
+            }}
+            className="text-white hover:bg-white/20"
+          >
+            {isSpeaking ? <Volume2 className="h-6 w-6" /> : <VolumeX className="h-6 w-6" />}
+          </Button>
         </div>
       </div>
 
