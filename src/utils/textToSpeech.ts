@@ -1,95 +1,75 @@
+// Map language codes to speech synthesis language codes with Indian accent
+const languageVoiceMap: Record<string, string> = {
+  en: "en-IN",
+  hi: "hi-IN",
+  bn: "bn-IN",
+  te: "te-IN",
+  ta: "ta-IN",
+  mr: "mr-IN",
+  gu: "gu-IN",
+  kn: "kn-IN",
+  ml: "ml-IN",
+  pa: "pa-IN",
+  or: "or-IN",
+  as: "as-IN",
+};
+
 export class TextToSpeech {
+  private synthesis: SpeechSynthesis;
+  private utterance: SpeechSynthesisUtterance | null = null;
   private currentLanguage: string = "en";
-  private currentAudio: HTMLAudioElement | null = null;
-  private onEndCallback: (() => void) | null = null;
+
+  constructor() {
+    this.synthesis = window.speechSynthesis;
+  }
 
   setLanguage(language: string) {
     this.currentLanguage = language;
   }
 
-  async speak(text: string, onEnd?: () => void) {
+  speak(text: string, onEnd?: () => void) {
     // Cancel any ongoing speech
     this.stop();
 
-    this.onEndCallback = onEnd || null;
+    this.utterance = new SpeechSynthesisUtterance(text);
+    this.utterance.lang = languageVoiceMap[this.currentLanguage] || "en-IN";
+    this.utterance.rate = 0.9;
+    this.utterance.pitch = 1.0;
+    this.utterance.volume = 1.0;
 
-    try {
-      // Call the edge function for TTS
-      const response = await fetch(
-        `https://zvzunrkbcpktahpvptta.supabase.co/functions/v1/text-to-speech`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: text,
-            language: this.currentLanguage,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to generate speech');
-      }
-
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Convert base64 to audio and play
-      const audioBlob = this.base64ToBlob(data.audioContent, 'audio/mpeg');
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      this.currentAudio = new Audio(audioUrl);
-      this.currentAudio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        if (this.onEndCallback) {
-          this.onEndCallback();
-        }
-      };
-      
-      await this.currentAudio.play();
-    } catch (error) {
-      console.error('Text-to-speech error:', error);
-      if (this.onEndCallback) {
-        this.onEndCallback();
-      }
+    if (onEnd) {
+      this.utterance.onend = onEnd;
     }
-  }
 
-  private base64ToBlob(base64: string, contentType: string): Blob {
-    const binaryString = atob(base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    // Wait for voices to load
+    if (this.synthesis.getVoices().length === 0) {
+      this.synthesis.addEventListener('voiceschanged', () => {
+        this.synthesis.speak(this.utterance!);
+      }, { once: true });
+    } else {
+      this.synthesis.speak(this.utterance);
     }
-    return new Blob([bytes], { type: contentType });
   }
 
   stop() {
-    if (this.currentAudio) {
-      this.currentAudio.pause();
-      this.currentAudio.currentTime = 0;
-      this.currentAudio = null;
+    if (this.synthesis.speaking) {
+      this.synthesis.cancel();
     }
   }
 
   pause() {
-    if (this.currentAudio && !this.currentAudio.paused) {
-      this.currentAudio.pause();
+    if (this.synthesis.speaking && !this.synthesis.paused) {
+      this.synthesis.pause();
     }
   }
 
   resume() {
-    if (this.currentAudio && this.currentAudio.paused) {
-      this.currentAudio.play();
+    if (this.synthesis.paused) {
+      this.synthesis.resume();
     }
   }
 
   isSpeaking(): boolean {
-    return this.currentAudio !== null && !this.currentAudio.paused;
+    return this.synthesis.speaking;
   }
 }
