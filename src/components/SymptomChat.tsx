@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Send, Loader2, Volume2, VolumeX, Pause, Play } from "lucide-react";
+import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,7 +7,6 @@ import VoiceInput from "./VoiceInput";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getTranslation, type Language } from "@/lib/translations";
-import { TextToSpeech } from "@/utils/textToSpeech";
 
 interface Message {
   role: "user" | "assistant";
@@ -23,18 +22,9 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const ttsRef = useRef<TextToSpeech | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Initialize TTS
-    if (!ttsRef.current) {
-      ttsRef.current = new TextToSpeech();
-    }
-    ttsRef.current.setLanguage(language);
-
     const initialMessage = getTranslation(language as Language, "initialMessage");
     setMessages([
       {
@@ -42,11 +32,6 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
         content: initialMessage,
       },
     ]);
-    
-    // Speak initial message
-    setTimeout(() => {
-      ttsRef.current?.speak(initialMessage);
-    }, 500);
   }, [language]);
 
   const handleSendMessage = async (text: string) => {
@@ -80,16 +65,6 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
       if (data?.response) {
         const assistantMessage: Message = { role: "assistant", content: data.response };
         setMessages((prev) => [...prev, assistantMessage]);
-        
-        // Speak the assistant's response
-        setTimeout(() => {
-          ttsRef.current?.speak(data.response, () => {
-            setIsSpeaking(false);
-            setIsPaused(false);
-          });
-          setIsSpeaking(true);
-          setIsPaused(false);
-        }, 300);
       }
     } catch (error: any) {
       console.error("Error calling health assistant:", error);
@@ -116,43 +91,9 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
-          <div className="flex-1">
+          <div>
             <h2 className="text-xl font-semibold">{getTranslation(language as Language, "symptomChecker")}</h2>
             <p className="text-sm text-white/80">{getTranslation(language as Language, "aiHealthAssistant")}</p>
-          </div>
-          <div className="flex gap-2">
-            {isSpeaking && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  if (isPaused) {
-                    ttsRef.current?.resume();
-                    setIsPaused(false);
-                  } else {
-                    ttsRef.current?.pause();
-                    setIsPaused(true);
-                  }
-                }}
-                className="text-white hover:bg-white/20"
-              >
-                {isPaused ? <Play className="h-6 w-6" /> : <Pause className="h-6 w-6" />}
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (ttsRef.current?.isSpeaking()) {
-                  ttsRef.current.stop();
-                  setIsSpeaking(false);
-                  setIsPaused(false);
-                }
-              }}
-              className="text-white hover:bg-white/20"
-            >
-              {isSpeaking ? <Volume2 className="h-6 w-6" /> : <VolumeX className="h-6 w-6" />}
-            </Button>
           </div>
         </div>
       </div>
