@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Loader2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -43,7 +43,6 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
     setIsLoading(true);
 
     try {
-      // Get nearby hospitals from localStorage
       const nearbyHospitals = JSON.parse(localStorage.getItem('nearbyHospitals') || '[]');
       const userLocation = JSON.parse(localStorage.getItem('userLocation') || 'null');
 
@@ -55,7 +54,7 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
             role: msg.role,
             content: msg.content
           })),
-          nearbyHospitals: nearbyHospitals.slice(0, 2), // Send top 2 hospitals
+          nearbyHospitals: nearbyHospitals.slice(0, 2),
           userLocation: userLocation
         },
       });
@@ -81,19 +80,24 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-secondary p-4 text-white shadow-medium">
+      <div className="bg-gradient-to-r from-primary to-secondary p-5 text-primary-foreground">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="text-white hover:bg-white/20"
+            className="text-primary-foreground hover:bg-primary-foreground/10 rounded-xl"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h2 className="text-xl font-semibold">{getTranslation(language as Language, "symptomChecker")}</h2>
-            <p className="text-sm text-white/80">{getTranslation(language as Language, "aiHealthAssistant")}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary-foreground/15 flex items-center justify-center">
+              <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground/40" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">{getTranslation(language as Language, "symptomChecker")}</h2>
+              <p className="text-sm text-primary-foreground/70 font-light">{getTranslation(language as Language, "aiHealthAssistant")}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -107,20 +111,23 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-4 shadow-soft ${
+                className={`max-w-[85%] p-4 ${
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card text-card-foreground"
+                    ? "bg-primary text-primary-foreground rounded-3xl rounded-br-lg"
+                    : "bg-card text-card-foreground rounded-3xl rounded-bl-lg shadow-soft border border-border/50"
                 }`}
               >
-                <p className="whitespace-pre-line">{message.content}</p>
+                <p className="whitespace-pre-line leading-relaxed">{message.content}</p>
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-card rounded-2xl p-4 shadow-soft">
-                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <div className="bg-card rounded-3xl rounded-bl-lg p-4 shadow-soft border border-border/50">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">Thinking...</span>
+                </div>
               </div>
             </div>
           )}
@@ -128,7 +135,7 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t bg-card p-4">
+      <div className="border-t border-border/50 bg-card/80 backdrop-blur-sm p-4">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <VoiceInput onTranscript={handleVoiceInput} language={language} />
           <Input
@@ -136,13 +143,13 @@ const SymptomChat = ({ language, onBack }: SymptomChatProps) => {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage(input)}
             placeholder={getTranslation(language as Language, "typeSymptoms")}
-            className="flex-1 h-12 text-base"
+            className="flex-1 h-12 text-base rounded-2xl"
             disabled={isLoading}
           />
           <Button
             onClick={() => handleSendMessage(input)}
             size="icon"
-            className="h-12 w-12"
+            className="h-12 w-12 rounded-2xl"
             disabled={isLoading || !input.trim()}
           >
             <Send className="h-5 w-5" />

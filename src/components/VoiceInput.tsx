@@ -13,7 +13,6 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const [recognition, setRecognition] = useState<any>(null);
 
   useEffect(() => {
-    // Detect iOS Safari
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
@@ -21,20 +20,10 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       const SpeechRecognition = (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
-      // Map language codes to speech recognition language codes
       const languageMap: Record<string, string> = {
-        en: "en-US", // iOS Safari works better with en-US
-        hi: "hi-IN",
-        bn: "bn-IN",
-        te: "te-IN",
-        ta: "ta-IN",
-        mr: "mr-IN",
-        gu: "gu-IN",
-        kn: "kn-IN",
-        ml: "ml-IN",
-        pa: "pa-IN",
-        or: "or-IN",
-        as: "as-IN",
+        en: "en-US", hi: "hi-IN", bn: "bn-IN", te: "te-IN",
+        ta: "ta-IN", mr: "mr-IN", gu: "gu-IN", kn: "kn-IN",
+        ml: "ml-IN", pa: "pa-IN", or: "or-IN", as: "as-IN",
       };
       
       recognitionInstance.continuous = false;
@@ -42,22 +31,17 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       recognitionInstance.lang = languageMap[language] || "en-US";
       recognitionInstance.maxAlternatives = 1;
       
-      // Show warning for iOS Safari with non-English languages
       if (isIOS && isSafari && language !== "en") {
-        toast.error("iOS Safari has limited support for Indian languages. For best results, use English or try Chrome on Android.", {
-          duration: 5000
-        });
+        toast.error("iOS Safari has limited support for Indian languages. For best results, use English or try Chrome on Android.", { duration: 5000 });
       }
 
       recognitionInstance.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        console.log(`Recognized ${language}:`, transcript);
         onTranscript(transcript);
         setIsListening(false);
       };
 
       recognitionInstance.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error, "Language:", language);
         if (event.error === "no-speech") {
           toast.error("No speech detected. Please try again.");
         } else if (event.error === "not-allowed") {
@@ -68,10 +52,7 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
         setIsListening(false);
       };
 
-      recognitionInstance.onend = () => {
-        setIsListening(false);
-      };
-
+      recognitionInstance.onend = () => setIsListening(false);
       setRecognition(recognitionInstance);
     }
   }, [language, onTranscript]);
@@ -81,7 +62,6 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       toast.error("Voice input not supported on this device");
       return;
     }
-
     if (isListening) {
       recognition.stop();
       setIsListening(false);
@@ -95,18 +75,15 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   return (
     <Button
       onClick={toggleListening}
-      size="lg"
-      className={`w-20 h-20 rounded-full transition-all ${
+      size="icon"
+      variant="outline"
+      className={`h-12 w-12 rounded-2xl transition-all ${
         isListening 
-          ? "bg-destructive hover:bg-destructive/90 animate-pulse shadow-strong" 
-          : "bg-primary hover:bg-primary/90 shadow-medium hover:shadow-strong"
+          ? "bg-destructive text-destructive-foreground border-destructive animate-pulse shadow-strong" 
+          : "hover:bg-muted"
       }`}
     >
-      {isListening ? (
-        <MicOff className="w-8 h-8 text-white" />
-      ) : (
-        <Mic className="w-8 h-8 text-white" />
-      )}
+      {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
     </Button>
   );
 };
