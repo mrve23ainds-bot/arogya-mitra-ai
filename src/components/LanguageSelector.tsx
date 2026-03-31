@@ -1,4 +1,4 @@
-import { Languages } from "lucide-react";
+import { Globe } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -30,16 +30,16 @@ interface LanguageSelectorProps {
 
 const LanguageSelector = ({ selectedLanguage, onLanguageChange }: LanguageSelectorProps) => {
   return (
-    <div className="bg-card rounded-2xl p-6 shadow-soft">
+    <div className="bg-card rounded-3xl p-6 shadow-soft border border-border/50">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Languages className="w-5 h-5 text-primary" />
+          <Globe className="w-5 h-5 text-primary" />
         </div>
         <h2 className="text-lg font-semibold">{getTranslation(selectedLanguage as Language, "chooseLanguage")}</h2>
       </div>
       
       <Select value={selectedLanguage} onValueChange={onLanguageChange}>
-        <SelectTrigger className="w-full h-12 text-base">
+        <SelectTrigger className="w-full h-12 text-base rounded-2xl">
           <SelectValue placeholder="Select language" />
         </SelectTrigger>
         <SelectContent>
