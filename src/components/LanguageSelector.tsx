@@ -11,16 +11,10 @@ import { getTranslation, type Language } from "@/lib/translations";
 const languages = [
   { code: "en", name: "English" },
   { code: "hi", name: "हिंदी (Hindi)" },
-  { code: "bn", name: "বাংলা (Bengali)" },
-  { code: "te", name: "తెలుగు (Telugu)" },
-  { code: "mr", name: "मराठी (Marathi)" },
   { code: "ta", name: "தமிழ் (Tamil)" },
-  { code: "gu", name: "ગુજરાતી (Gujarati)" },
-  { code: "kn", name: "ಕನ್ನಡ (Kannada)" },
   { code: "ml", name: "മലയാളം (Malayalam)" },
-  { code: "pa", name: "ਪੰਜਾਬੀ (Punjabi)" },
-  { code: "or", name: "ଓଡ଼ିଆ (Odia)" },
-  { code: "as", name: "অসমীয়া (Assamese)" },
+  { code: "te", name: "తెలుగు (Telugu)" },
+  { code: "kn", name: "ಕನ್ನಡ (Kannada)" },
 ];
 
 interface LanguageSelectorProps {
