@@ -39,18 +39,16 @@ CRITICAL INSTRUCTIONS:
 - User is speaking in language code: ${language}
 - Respond ONLY in ${language}, never in English
 - Extract health symptoms and conditions from user input
-- Provide clear, actionable advice in simple language
-- Include:
-  1. Possible causes
-  2. First aid steps
-  3. When to seek immediate care
-  4. ALWAYS suggest the 2 nearest hospitals from the list below at the end of your response
-- Use bullet points and clear formatting
+- Keep responses SHORT and SIMPLE
+- Include EXACTLY:
+  1. 4 home remedies (numbered 1-4, one line each)
+  2. 4 things to do / action steps (numbered 1-4, one line each)
+- Do NOT suggest hospitals or clinics
+- Do NOT give long explanations
+- Use simple language anyone can understand
 - Be compassionate and reassuring
-- Prioritize safety - always recommend professional care when serious
-${hospitalContext}
 
-Base your responses on reliable health information from WHO, government health departments, and medical guidelines.`
+Base your responses on reliable health information from WHO and medical guidelines.`
       },
       ...conversationHistory,
       { role: "user", content: message }
