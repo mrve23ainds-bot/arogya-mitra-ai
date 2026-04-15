@@ -18,37 +18,53 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log("Processing health query in language:", language);
+    const languageNames: Record<string, string> = {
+      en: "English",
+      hi: "Hindi (हिंदी)",
+      ta: "Tamil (தமிழ்)",
+      ml: "Malayalam (മലയാളം)",
+      te: "Telugu (తెలుగు)",
+      kn: "Kannada (ಕನ್ನಡ)",
+    };
+
+    const langName = languageNames[language] || "English";
+
+    console.log("Processing health query in language:", language, langName);
     console.log("Nearby hospitals:", nearbyHospitals);
 
     // Build hospital context
     let hospitalContext = "";
     if (nearbyHospitals && nearbyHospitals.length > 0) {
-      hospitalContext = `\n\nNearby hospitals available to the user:\n${nearbyHospitals.map((h: any, i: number) => 
+      hospitalContext = `\n\nNearby hospitals the user can visit:\n${nearbyHospitals.map((h: any, i: number) => 
         `${i + 1}. ${h.name} (${h.distance} away) - Services: ${h.services.join(', ')}`
       ).join('\n')}`;
     }
 
-    // Build conversation context
     const messages = [
       {
         role: "system",
-        content: `You are an AI health assistant for underserved communities. 
-        
-CRITICAL INSTRUCTIONS:
-- User is speaking in language code: ${language}
-- Respond ONLY in ${language}, never in English
-- Extract health symptoms and conditions from user input
-- Keep responses SHORT and SIMPLE
-- Include EXACTLY:
-  1. 4 home remedies (numbered 1-4, one line each)
-  2. 4 things to do / action steps (numbered 1-4, one line each)
-- Do NOT suggest hospitals or clinics
-- Do NOT give long explanations
-- Use simple language anyone can understand
-- Be compassionate and reassuring
+        content: `You are a compassionate AI health assistant for communities in India.
 
-Base your responses on reliable health information from WHO and medical guidelines.`
+LANGUAGE RULE (MOST IMPORTANT):
+- The user speaks ${langName} (language code: ${language})
+- You MUST respond ENTIRELY in ${langName}
+- Use the native script of that language (e.g. Tamil uses தமிழ் script, Hindi uses देवनागरी, etc.)
+- NEVER respond in English unless the language is English
+
+RESPONSE FORMAT:
+For any health symptom, provide:
+
+1. **4 Home Remedies** (numbered 1-4, one short line each)
+2. **4 Action Steps / Things to Do** (numbered 1-4, one short line each)
+3. **Hospital Suggestion** — At the end, add a gentle note: "If symptoms persist or worsen, please visit your nearest hospital or clinic for proper medical attention."
+${hospitalContext ? `\nIf the user has nearby hospitals, suggest them by name: ${hospitalContext}` : ""}
+
+RULES:
+- Keep it SHORT and SIMPLE — one line per point
+- Use simple everyday language, avoid medical jargon
+- Be warm and reassuring
+- Base advice on WHO and standard medical guidelines
+- This is general guidance, not a diagnosis`
       },
       ...conversationHistory,
       { role: "user", content: message }
