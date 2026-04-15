@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Sparkles, Activity, Shield } from "lucide-react";
+import { Heart, Sparkles, Activity, Shield, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSelector from "@/components/LanguageSelector";
 import SymptomChat from "@/components/SymptomChat";
@@ -7,6 +7,23 @@ import { getTranslation, type Language } from "@/lib/translations";
 import { motion } from "framer-motion";
 
 type Screen = "welcome" | "chat";
+
+const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: number }) => (
+  <motion.div
+    animate={{
+      y: [0, -20, 0],
+      x: [0, 10, 0],
+      scale: [1, 1.05, 1],
+    }}
+    transition={{
+      duration: 6,
+      repeat: Infinity,
+      delay,
+      ease: "easeInOut",
+    }}
+    className={className}
+  />
+);
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("welcome");
@@ -18,71 +35,98 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-15%] w-[60vw] h-[60vw] rounded-full bg-primary/8 blur-[100px]" />
-        <div className="absolute bottom-[-10%] left-[-15%] w-[50vw] h-[50vw] rounded-full bg-secondary/8 blur-[100px]" />
-        <div className="absolute top-[40%] left-[50%] w-[30vw] h-[30vw] rounded-full bg-accent/5 blur-[80px]" />
-      </div>
+      {/* Animated floating orbs */}
+      <FloatingOrb className="absolute top-[5%] right-[10%] w-72 h-72 rounded-full bg-primary/[0.07] blur-[80px]" delay={0} />
+      <FloatingOrb className="absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-secondary/[0.08] blur-[100px]" delay={2} />
+      <FloatingOrb className="absolute top-[50%] left-[60%] w-48 h-48 rounded-full bg-accent/[0.06] blur-[60px]" delay={4} />
+      
+      {/* Subtle grid pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)`,
+        backgroundSize: '40px 40px'
+      }} />
 
-      {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="max-w-lg w-full space-y-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="max-w-md w-full"
         >
-          {/* Logo & Title */}
-          <div className="text-center space-y-6">
+          {/* Icon cluster */}
+          <div className="relative flex justify-center mb-8">
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.6, type: "spring", stiffness: 200 }}
-              className="relative inline-block"
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+              className="relative"
             >
-              <div className="w-28 h-28 mx-auto bg-gradient-to-br from-primary via-secondary to-accent rounded-[2.5rem] flex items-center justify-center shadow-strong rotate-3 hover:rotate-0 transition-transform duration-500">
-                <Heart className="w-13 h-13 text-primary-foreground fill-primary-foreground/30" style={{ width: 52, height: 52 }} />
+              {/* Outer glow ring */}
+              <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-primary/20 to-secondary/10 blur-xl" />
+              
+              {/* Main icon */}
+              <div className="relative w-24 h-24 bg-gradient-to-br from-primary via-primary to-secondary rounded-[2rem] flex items-center justify-center shadow-strong">
+                <Heart className="text-primary-foreground fill-primary-foreground/30" style={{ width: 44, height: 44 }} />
               </div>
-              {/* Pulse ring */}
-              <div className="absolute inset-0 w-28 h-28 mx-auto rounded-[2.5rem] bg-primary/20 animate-ping" style={{ animationDuration: "3s" }} />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <h1 className="text-5xl font-bold text-foreground tracking-tight leading-tight">
-                {getTranslation(selectedLanguage as Language, "appName")}
-              </h1>
-              <p className="text-muted-foreground text-lg mt-3 font-light leading-relaxed max-w-sm mx-auto">
-                {getTranslation(selectedLanguage as Language, "tagline")}
-              </p>
+              
+              {/* Floating mini badges */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.6, type: "spring" }}
+                className="absolute -top-2 -right-3 w-10 h-10 bg-card border-2 border-border/50 rounded-2xl flex items-center justify-center shadow-medium"
+              >
+                <Stethoscope className="w-5 h-5 text-primary" />
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.8, type: "spring" }}
+                className="absolute -bottom-2 -left-3 w-9 h-9 bg-card border-2 border-border/50 rounded-xl flex items-center justify-center shadow-medium"
+              >
+                <Activity className="w-4 h-4 text-secondary" />
+              </motion.div>
             </motion.div>
           </div>
 
-          {/* Feature pills */}
+          {/* Title */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex flex-wrap justify-center gap-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            className="text-center mb-6"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight mb-3">
+              {getTranslation(selectedLanguage as Language, "appName")}
+            </h1>
+            <p className="text-muted-foreground text-base md:text-lg font-light leading-relaxed max-w-xs mx-auto">
+              {getTranslation(selectedLanguage as Language, "tagline")}
+            </p>
+          </motion.div>
+
+          {/* Feature cards row */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="flex justify-center gap-3 mb-8"
           >
             {[
-              { icon: Activity, label: "AI Powered" },
-              { icon: Shield, label: "Private & Safe" },
-              { icon: Heart, label: "24/7 Available" },
+              { icon: Sparkles, label: "AI Powered", color: "text-primary" },
+              { icon: Shield, label: "Private & Safe", color: "text-secondary" },
+              { icon: Heart, label: "24/7 Care", color: "text-accent" },
             ].map((item, i) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7 + i * 0.1 }}
-                className="flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2 shadow-soft"
+                whileHover={{ y: -3, scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 400 }}
+                className="flex flex-col items-center gap-2 bg-card/70 backdrop-blur-md border border-border/40 rounded-2xl px-4 py-3.5 shadow-soft cursor-default"
               >
-                <item.icon className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground/80 font-medium">{item.label}</span>
+                <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
+                  <item.icon className={`w-4 h-4 ${item.color}`} />
+                </div>
+                <span className="text-[11px] text-muted-foreground font-semibold tracking-wide uppercase">{item.label}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -91,7 +135,8 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="mb-6"
           >
             <LanguageSelector
               selectedLanguage={selectedLanguage}
@@ -103,27 +148,38 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.5 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
           >
-            <Button
-              onClick={() => setCurrentScreen("chat")}
-              className="w-full h-16 text-lg rounded-2xl shadow-medium hover:shadow-strong transition-all hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
-              size="lg"
-            >
-              <Sparkles className="mr-3 h-5 w-5" />
-              {getTranslation(selectedLanguage as Language, "checkSymptoms")}
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                onClick={() => setCurrentScreen("chat")}
+                className="w-full h-14 text-base font-semibold rounded-2xl shadow-strong hover:shadow-strong transition-all relative overflow-hidden group"
+                size="lg"
+                style={{
+                  background: `linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 50%, hsl(var(--accent)) 100%)`,
+                  backgroundSize: '200% 200%',
+                }}
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <Sparkles className="mr-2 h-5 w-5 relative z-10" />
+                <span className="relative z-10">{getTranslation(selectedLanguage as Language, "checkSymptoms")}</span>
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* Footer */}
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="text-center text-xs text-muted-foreground/50 font-light"
+            transition={{ delay: 1.1 }}
+            className="mt-8 flex items-center justify-center gap-2"
           >
-            Your health companion — always here for you ☕
-          </motion.p>
+            <div className="h-px w-12 bg-border" />
+            <p className="text-xs text-muted-foreground/50 font-light">
+              Your health companion ☕
+            </p>
+            <div className="h-px w-12 bg-border" />
+          </motion.div>
         </motion.div>
       </div>
     </div>
