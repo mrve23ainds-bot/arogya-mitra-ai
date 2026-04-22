@@ -143,31 +143,50 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     }
   }, [buildRecognition]);
 
+  const micGrantedRef = useRef(false);
+
   const ensureMicrophoneAccess = useCallback(async () => {
+    // If we've already been granted access in this session, skip the re-check.
+    // Re-querying getUserMedia after switching languages can lose the user-gesture
+    // context in some browsers and surface a false "blocked" error.
+    if (micGrantedRef.current) return true;
+
     if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error("Microphone access is not supported on this browser.");
-      return false;
+      // No mediaDevices API — let SpeechRecognition try directly; it has its own permission flow.
+      return true;
     }
 
+    // Check permission state non-blockingly. Only bail if explicitly denied.
     try {
       if (navigator.permissions) {
         const status = await navigator.permissions.query({
           name: "microphone" as PermissionName,
         });
 
+        if (status.state === "granted") {
+          micGrantedRef.current = true;
+          return true;
+        }
+
         if (status.state === "denied") {
           toast.error("Microphone blocked. Enable it in browser site settings and reload the page.");
           return false;
         }
+        // 'prompt' → fall through to getUserMedia to trigger the prompt
       }
+    } catch {
+      // permissions.query not supported (Safari) — fall through
+    }
 
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => track.stop());
+      micGrantedRef.current = true;
       return true;
     } catch (error: any) {
       console.error("Microphone permission error:", error);
 
-      if (error?.name === "NotAllowedError") {
+      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
         toast.error("Permission denied. Please allow microphone access in browser settings.");
       } else if (error?.name === "NotFoundError") {
         toast.error("No microphone found on this device.");
