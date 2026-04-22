@@ -32,11 +32,18 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const finalTranscriptRef = useRef("");
   const onTranscriptRef = useRef(onTranscript);
   const localeIndexRef = useRef(0);
-  const retryingRef = useRef(false);
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
   }, [onTranscript]);
+
+  useEffect(() => {
+    localeIndexRef.current = 0;
+    try {
+      recognitionRef.current?.abort();
+    } catch {}
+    setIsListening(false);
+  }, [language]);
 
   const buildRecognition = useCallback((locale: string) => {
     const SpeechRecognition =
@@ -45,72 +52,54 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     if (!SpeechRecognition) return null;
 
     const instance = new SpeechRecognition();
-    instance.continuous = true;
-    instance.interimResults = true;
-    instance.maxAlternatives = 3;
+    instance.continuous = false;
+    instance.interimResults = false;
+    instance.maxAlternatives = 1;
     instance.lang = locale;
 
     instance.onresult = (event: any) => {
-      let finalText = "";
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalText += result[0].transcript;
-        }
+      const transcript = event.results?.[0]?.[0]?.transcript?.trim();
+      if (transcript) {
+        onTranscriptRef.current(transcript);
       }
-
-      if (finalText) {
-        finalTranscriptRef.current += `${finalText} `;
-      }
+      finalTranscriptRef.current = "";
     };
 
     instance.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error, "locale:", locale);
+      const localeError = `${event.error}${locale ? ` (${locale})` : ""}`;
+      console.error("Speech recognition error:", localeError);
 
       if (event.error === "language-not-supported") {
         const locales = languageLocales[language] || ["en-IN"];
-        if (localeIndexRef.current < locales.length - 1) {
+        const nextLocale = locales[localeIndexRef.current + 1];
+
+        if (nextLocale) {
           localeIndexRef.current += 1;
-          retryingRef.current = true;
-          setTimeout(() => startWithLocale(locales[localeIndexRef.current]), 120);
-          return;
+          toast.error(
+            `${languageNames[language] || "This language"} is not supported with ${locale} on this browser. Tap the mic again to try ${nextLocale}.`
+          );
+        } else {
+          toast.error(
+            `${languageNames[language] || "This language"} voice input is not supported on this browser/device. Error: ${localeError}`
+          );
         }
-
-        toast.error(
-          `${languageNames[language] || "This language"} voice input is not supported on this device. Please type instead.`
-        );
-        setIsListening(false);
-        return;
-      }
-
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        toast.error("Microphone blocked. Please allow mic access in browser settings, then try again.");
+      } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        toast.error(`Microphone permission blocked. Error: ${localeError}`);
       } else if (event.error === "no-speech") {
-        toast.error("No speech detected. Please speak clearly and try again.");
+        toast.error(`No speech detected. Error: ${localeError}`);
       } else if (event.error === "audio-capture") {
-        toast.error("No microphone detected on this device.");
+        toast.error(`No microphone detected. Error: ${localeError}`);
       } else if (event.error === "network") {
-        toast.error("Voice recognition needs internet. Please check your connection.");
+        toast.error(`Voice recognition needs internet. Error: ${localeError}`);
       } else if (event.error !== "aborted") {
-        toast.error("Voice input failed. Please try again.");
+        toast.error(`Voice input failed. Error: ${localeError}`);
       }
 
       setIsListening(false);
     };
 
     instance.onend = () => {
-      if (retryingRef.current) {
-        retryingRef.current = false;
-        return;
-      }
-
       setIsListening(false);
-      const transcript = finalTranscriptRef.current.trim();
-      if (transcript) {
-        onTranscriptRef.current(transcript);
-      }
-      finalTranscriptRef.current = "";
     };
 
     return instance;
@@ -125,18 +114,17 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       }
 
       recognitionRef.current = instance;
-      finalTranscriptRef.current = "";
       instance.start();
       setIsListening(true);
     } catch (error: any) {
       console.error("Failed to start speech recognition:", error);
 
       if (error?.name === "NotAllowedError") {
-        toast.error("Permission denied. Please allow microphone access and try again.");
+        toast.error(`Permission denied. Error: ${error.name}`);
       } else if (error?.name === "InvalidStateError") {
-        toast.error("Microphone is already active. Please wait a moment and try again.");
+        toast.error(`Microphone is already active. Error: ${error.name}`);
       } else {
-        toast.error("Could not start voice input. Please try again.");
+        toast.error(`Could not start voice input. Error: ${error?.name || "unknown"}`);
       }
 
       setIsListening(false);
@@ -168,16 +156,12 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       return;
     }
 
-    // Start recognition synchronously inside the click handler.
-    // SpeechRecognition.start() will trigger the browser's mic permission prompt itself —
-    // calling getUserMedia first (with awaits) breaks the user-gesture chain and causes
-    // a false "not-allowed" error when switching languages.
-    localeIndexRef.current = 0;
     const locales = languageLocales[language] || ["en-IN"];
+    const locale = locales[localeIndexRef.current] || locales[0];
     const languageName = languageNames[language] || "selected language";
 
-    toast.info(`Listening in ${languageName}... Speak now`);
-    startWithLocale(locales[0]);
+    toast.info(`Listening in ${languageName} (${locale})... Speak now`);
+    startWithLocale(locale);
   };
 
   return (
