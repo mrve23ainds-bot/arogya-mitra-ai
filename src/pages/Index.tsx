@@ -5,6 +5,7 @@ import LanguageSelector from "@/components/LanguageSelector";
 import SymptomChat from "@/components/SymptomChat";
 import { getTranslation, type Language } from "@/lib/translations";
 import { motion } from "framer-motion";
+import medicalBg from "@/assets/medical-bg.jpg";
 
 type Screen = "welcome" | "chat";
 
@@ -35,11 +36,25 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Soft medical illustration background */}
+      <div
+        className="absolute inset-0 opacity-40 mix-blend-multiply"
+        style={{
+          backgroundImage: `url(${medicalBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+        aria-hidden="true"
+      />
+      {/* Warm tint over the image to blend with the palette */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/80" aria-hidden="true" />
+
       {/* Animated floating orbs */}
       <FloatingOrb className="absolute top-[5%] right-[10%] w-72 h-72 rounded-full bg-primary/[0.07] blur-[80px]" delay={0} />
       <FloatingOrb className="absolute bottom-[10%] left-[5%] w-96 h-96 rounded-full bg-secondary/[0.08] blur-[100px]" delay={2} />
       <FloatingOrb className="absolute top-[50%] left-[60%] w-48 h-48 rounded-full bg-accent/[0.06] blur-[60px]" delay={4} />
-      
+
       {/* Subtle grid pattern overlay */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)`,
