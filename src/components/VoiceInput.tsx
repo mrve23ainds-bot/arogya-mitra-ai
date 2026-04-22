@@ -143,63 +143,6 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     }
   }, [buildRecognition]);
 
-  const micGrantedRef = useRef(false);
-
-  const ensureMicrophoneAccess = useCallback(async () => {
-    // If we've already been granted access in this session, skip the re-check.
-    // Re-querying getUserMedia after switching languages can lose the user-gesture
-    // context in some browsers and surface a false "blocked" error.
-    if (micGrantedRef.current) return true;
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      // No mediaDevices API — let SpeechRecognition try directly; it has its own permission flow.
-      return true;
-    }
-
-    // Check permission state non-blockingly. Only bail if explicitly denied.
-    try {
-      if (navigator.permissions) {
-        const status = await navigator.permissions.query({
-          name: "microphone" as PermissionName,
-        });
-
-        if (status.state === "granted") {
-          micGrantedRef.current = true;
-          return true;
-        }
-
-        if (status.state === "denied") {
-          toast.error("Microphone blocked. Enable it in browser site settings and reload the page.");
-          return false;
-        }
-        // 'prompt' → fall through to getUserMedia to trigger the prompt
-      }
-    } catch {
-      // permissions.query not supported (Safari) — fall through
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      micGrantedRef.current = true;
-      return true;
-    } catch (error: any) {
-      console.error("Microphone permission error:", error);
-
-      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
-        toast.error("Permission denied. Please allow microphone access in browser settings.");
-      } else if (error?.name === "NotFoundError") {
-        toast.error("No microphone found on this device.");
-      } else if (error?.name === "NotReadableError") {
-        toast.error("Microphone is being used by another app. Close it and try again.");
-      } else {
-        toast.error("Unable to access microphone. Please try again.");
-      }
-
-      return false;
-    }
-  }, []);
-
   useEffect(() => {
     return () => {
       try {
@@ -208,7 +151,7 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     };
   }, []);
 
-  const toggleListening = async () => {
+  const toggleListening = () => {
     if (isListening) {
       try {
         recognitionRef.current?.stop();
@@ -225,9 +168,10 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       return;
     }
 
-    const hasMicAccess = await ensureMicrophoneAccess();
-    if (!hasMicAccess) return;
-
+    // Start recognition synchronously inside the click handler.
+    // SpeechRecognition.start() will trigger the browser's mic permission prompt itself —
+    // calling getUserMedia first (with awaits) breaks the user-gesture chain and causes
+    // a false "not-allowed" error when switching languages.
     localeIndexRef.current = 0;
     const locales = languageLocales[language] || ["en-IN"];
     const languageName = languageNames[language] || "selected language";
