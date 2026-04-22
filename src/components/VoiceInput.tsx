@@ -10,11 +10,11 @@ interface VoiceInputProps {
 
 const languageLocales: Record<string, string[]> = {
   en: ["en-IN", "en-US", "en-GB"],
-  hi: ["hi-IN", "hi"],
-  ta: ["ta-IN", "ta-LK", "ta"],
-  ml: ["ml-IN", "ml"],
-  te: ["te-IN", "te"],
-  kn: ["kn-IN", "kn"],
+  hi: ["hi", "hi-IN"],
+  ta: ["ta", "ta-IN", "ta-LK"],
+  ml: ["ml", "ml-IN"],
+  te: ["te", "te-IN"],
+  kn: ["kn", "kn-IN"],
 };
 
 const languageNames: Record<string, string> = {
@@ -69,21 +69,22 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       const localeError = `${event.error}${locale ? ` (${locale})` : ""}`;
       console.error("Speech recognition error:", localeError);
 
-      if (event.error === "language-not-supported") {
-        const locales = languageLocales[language] || ["en-IN"];
-        const nextLocale = locales[localeIndexRef.current + 1];
+      const locales = languageLocales[language] || ["en-IN"];
+      const nextLocale = locales[localeIndexRef.current + 1];
+      const isLocaleFailure = event.error === "language-not-supported" || event.error === "service-not-allowed";
 
+      if (isLocaleFailure) {
         if (nextLocale) {
           localeIndexRef.current += 1;
           toast.error(
-            `${languageNames[language] || "This language"} is not supported with ${locale} on this browser. Tap the mic again to try ${nextLocale}.`
+            `${languageNames[language] || "This language"} isn't available with ${locale} on this browser. Tap the mic again to try ${nextLocale}.`
           );
         } else {
           toast.error(
             `${languageNames[language] || "This language"} voice input is not supported on this browser/device. Error: ${localeError}`
           );
         }
-      } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      } else if (event.error === "not-allowed") {
         toast.error(`Microphone permission blocked. Error: ${localeError}`);
       } else if (event.error === "no-speech") {
         toast.error(`No speech detected. Error: ${localeError}`);
