@@ -8,7 +8,6 @@ interface VoiceInputProps {
   language: string;
 }
 
-// Primary + fallback locales for each language (some devices/browsers don't ship every Indian locale)
 const languageLocales: Record<string, string[]> = {
   en: ["en-IN", "en-US", "en-GB"],
   hi: ["hi-IN", "hi"],
@@ -30,7 +29,7 @@ const languageNames: Record<string, string> = {
 const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
-  const finalTranscriptRef = useRef<string>("");
+  const finalTranscriptRef = useRef("");
   const onTranscriptRef = useRef(onTranscript);
   const localeIndexRef = useRef(0);
   const retryingRef = useRef(false);
@@ -42,59 +41,61 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const buildRecognition = useCallback((locale: string) => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
     if (!SpeechRecognition) return null;
 
     const instance = new SpeechRecognition();
-    instance.continuous = true; // keep listening — Tamil/regional often pause mid-sentence
+    instance.continuous = true;
     instance.interimResults = true;
     instance.maxAlternatives = 3;
     instance.lang = locale;
 
     instance.onresult = (event: any) => {
       let finalText = "";
-      let interimText = "";
+
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const res = event.results[i];
-        if (res.isFinal) finalText += res[0].transcript;
-        else interimText += res[0].transcript;
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalText += result[0].transcript;
+        }
       }
+
       if (finalText) {
-        finalTranscriptRef.current += finalText;
+        finalTranscriptRef.current += `${finalText} `;
       }
-      // ignore interimText — we only commit on stop / final
     };
 
     instance.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error, "locale:", locale);
 
-      // Try next fallback locale for language-not-supported
       if (event.error === "language-not-supported") {
         const locales = languageLocales[language] || ["en-IN"];
         if (localeIndexRef.current < locales.length - 1) {
           localeIndexRef.current += 1;
           retryingRef.current = true;
-          // restart with next locale
-          setTimeout(() => startWithLocale(locales[localeIndexRef.current]), 100);
+          setTimeout(() => startWithLocale(locales[localeIndexRef.current]), 120);
           return;
         }
+
         toast.error(
-          `${languageNames[language] || "This language"} voice input isn't supported on this device. Please type instead, or try Chrome on Android.`
+          `${languageNames[language] || "This language"} voice input is not supported on this device. Please type instead.`
         );
         setIsListening(false);
         return;
       }
 
-      if (event.error === "no-speech") {
-        toast.error("No speech detected. Please speak louder and try again.");
-      } else if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        toast.error("Microphone access denied. Please allow microphone access in your browser settings.");
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        toast.error("Microphone blocked. Please allow mic access in browser settings, then try again.");
+      } else if (event.error === "no-speech") {
+        toast.error("No speech detected. Please speak clearly and try again.");
       } else if (event.error === "audio-capture") {
-        toast.error("No microphone found. Please check your device.");
+        toast.error("No microphone detected on this device.");
       } else if (event.error === "network") {
-        toast.error("Network error. Voice recognition needs internet.");
+        toast.error("Voice recognition needs internet. Please check your connection.");
       } else if (event.error !== "aborted") {
-        toast.error("Could not understand. Please try again.");
+        toast.error("Voice input failed. Please try again.");
       }
+
       setIsListening(false);
     };
 
@@ -103,12 +104,13 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
         retryingRef.current = false;
         return;
       }
+
       setIsListening(false);
-      const text = finalTranscriptRef.current.trim();
-      if (text) {
-        onTranscriptRef.current(text);
-        finalTranscriptRef.current = "";
+      const transcript = finalTranscriptRef.current.trim();
+      if (transcript) {
+        onTranscriptRef.current(transcript);
       }
+      finalTranscriptRef.current = "";
     };
 
     return instance;
@@ -118,44 +120,100 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     try {
       const instance = buildRecognition(locale);
       if (!instance) {
-        toast.error("Voice input not supported on this browser. Please use Chrome.");
+        toast.error("Voice input is not supported on this browser. Please use Chrome.");
         return;
       }
+
       recognitionRef.current = instance;
       finalTranscriptRef.current = "";
       instance.start();
       setIsListening(true);
-    } catch (err) {
-      console.error("Failed to start speech recognition:", err);
-      toast.error("Failed to start voice input. Please try again.");
+    } catch (error: any) {
+      console.error("Failed to start speech recognition:", error);
+
+      if (error?.name === "NotAllowedError") {
+        toast.error("Permission denied. Please allow microphone access and try again.");
+      } else if (error?.name === "InvalidStateError") {
+        toast.error("Microphone is already active. Please wait a moment and try again.");
+      } else {
+        toast.error("Could not start voice input. Please try again.");
+      }
+
       setIsListening(false);
     }
   }, [buildRecognition]);
 
+  const ensureMicrophoneAccess = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast.error("Microphone access is not supported on this browser.");
+      return false;
+    }
+
+    try {
+      if (navigator.permissions) {
+        const status = await navigator.permissions.query({
+          name: "microphone" as PermissionName,
+        });
+
+        if (status.state === "denied") {
+          toast.error("Microphone blocked. Enable it in browser site settings and reload the page.");
+          return false;
+        }
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      return true;
+    } catch (error: any) {
+      console.error("Microphone permission error:", error);
+
+      if (error?.name === "NotAllowedError") {
+        toast.error("Permission denied. Please allow microphone access in browser settings.");
+      } else if (error?.name === "NotFoundError") {
+        toast.error("No microphone found on this device.");
+      } else if (error?.name === "NotReadableError") {
+        toast.error("Microphone is being used by another app. Close it and try again.");
+      } else {
+        toast.error("Unable to access microphone. Please try again.");
+      }
+
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
-      try { recognitionRef.current?.abort(); } catch {}
+      try {
+        recognitionRef.current?.abort();
+      } catch {}
     };
   }, []);
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isListening) {
-      try { recognitionRef.current?.stop(); } catch {}
+      try {
+        recognitionRef.current?.stop();
+      } catch {}
       setIsListening(false);
       return;
     }
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
     if (!SpeechRecognition) {
       toast.error("Voice input not supported on this browser. Please use Chrome for best results.");
       return;
     }
 
+    const hasMicAccess = await ensureMicrophoneAccess();
+    if (!hasMicAccess) return;
+
     localeIndexRef.current = 0;
     const locales = languageLocales[language] || ["en-IN"];
-    const langName = languageNames[language] || "";
-    toast.info(`Listening in ${langName}... Speak now`);
+    const languageName = languageNames[language] || "selected language";
+
+    toast.info(`Listening in ${languageName}... Speak now`);
     startWithLocale(locales[0]);
   };
 
