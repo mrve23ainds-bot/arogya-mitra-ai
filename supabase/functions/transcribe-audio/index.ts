@@ -46,7 +46,13 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        temperature: 0,
         messages: [
+          {
+            role: "system",
+            content:
+              "You are a strict speech-to-text engine. You only output the exact words spoken in the audio. You NEVER invent, guess, or fabricate words. If the audio contains no intelligible human speech (silence, noise, tones, music), you output exactly NO_SPEECH and nothing else.",
+          },
           {
             role: "user",
             content: [
@@ -55,11 +61,11 @@ Deno.serve(async (req) => {
                 type: "input_audio",
                 input_audio: { data: audio, format: "wav" },
               },
-
             ],
           },
         ],
       }),
+
     });
 
     if (!response.ok) {
