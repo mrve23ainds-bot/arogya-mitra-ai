@@ -10,11 +10,11 @@ interface VoiceInputProps {
 
 const languageLocales: Record<string, string[]> = {
   en: ["en-IN", "en-US", "en-GB"],
-  hi: ["hi", "hi-IN"],
-  ta: ["ta", "ta-IN", "ta-LK"],
-  ml: ["ml", "ml-IN"],
-  te: ["te", "te-IN"],
-  kn: ["kn", "kn-IN"],
+  hi: ["hi-IN", "hi"],
+  ta: ["ta-IN", "ta", "ta-LK"],
+  ml: ["ml-IN", "ml"],
+  te: ["te-IN", "te"],
+  kn: ["kn-IN", "kn"],
 };
 
 const languageNames: Record<string, string> = {
@@ -32,18 +32,12 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const finalTranscriptRef = useRef("");
   const onTranscriptRef = useRef(onTranscript);
   const localeIndexRef = useRef(0);
+  const retryingRef = useRef(false);
+  const startWithLocaleRef = useRef<(locale: string) => void>(() => {});
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
   }, [onTranscript]);
-
-  useEffect(() => {
-    localeIndexRef.current = 0;
-    try {
-      recognitionRef.current?.abort();
-    } catch {}
-    setIsListening(false);
-  }, [language]);
 
   const buildRecognition = useCallback((locale: string) => {
     const SpeechRecognition =
@@ -54,53 +48,79 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     const instance = new SpeechRecognition();
     instance.continuous = false;
     instance.interimResults = false;
-    instance.maxAlternatives = 1;
+    instance.maxAlternatives = 3;
     instance.lang = locale;
 
     instance.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript?.trim();
-      if (transcript) {
-        onTranscriptRef.current(transcript);
+      let finalText = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalText += result[0].transcript;
+        }
       }
-      finalTranscriptRef.current = "";
+
+      if (finalText) {
+        finalTranscriptRef.current += `${finalText} `;
+      }
     };
 
     instance.onerror = (event: any) => {
-      const localeError = `${event.error}${locale ? ` (${locale})` : ""}`;
-      console.error("Speech recognition error:", localeError);
+      console.error("Speech recognition error:", event.error, "locale:", locale);
 
-      const locales = languageLocales[language] || ["en-IN"];
-      const nextLocale = locales[localeIndexRef.current + 1];
-      const isLocaleFailure = event.error === "language-not-supported" || event.error === "service-not-allowed";
+      const isLocaleFailure =
+        event.error === "language-not-supported" || event.error === "service-not-allowed";
 
       if (isLocaleFailure) {
-        if (nextLocale) {
+        const locales = languageLocales[language] || ["en-IN"];
+        if (localeIndexRef.current < locales.length - 1) {
+          // Automatically retry with the next locale — no re-tap needed
           localeIndexRef.current += 1;
-          toast.error(
-            `${languageNames[language] || "This language"} isn't available with ${locale} on this browser. Tap the mic again to try ${nextLocale}.`
-          );
-        } else {
-          toast.error(
-            `${languageNames[language] || "This language"} voice input is not supported on this browser/device. Error: ${localeError}`
-          );
+          retryingRef.current = true;
+          const nextLocale = locales[localeIndexRef.current];
+          try {
+            startWithLocaleRef.current(nextLocale);
+          } catch {
+            setIsListening(false);
+          }
+          return;
         }
-      } else if (event.error === "not-allowed") {
-        toast.error(`Microphone permission blocked. Error: ${localeError}`);
+
+        toast.error(
+          `${languageNames[language] || "This language"} voice input isn't supported on this browser. Please type your symptoms instead.`
+        );
+        setIsListening(false);
+        return;
+      }
+
+      if (event.error === "not-allowed") {
+        toast.error("Microphone blocked. Please allow mic access in browser settings, then try again.");
       } else if (event.error === "no-speech") {
-        toast.error(`No speech detected. Error: ${localeError}`);
+        toast.error("No speech detected. Please speak clearly and try again.");
       } else if (event.error === "audio-capture") {
-        toast.error(`No microphone detected. Error: ${localeError}`);
+        toast.error("No microphone detected on this device.");
       } else if (event.error === "network") {
-        toast.error(`Voice recognition needs internet. Error: ${localeError}`);
+        toast.error("Voice recognition needs internet. Please check your connection.");
       } else if (event.error !== "aborted") {
-        toast.error(`Voice input failed. Error: ${localeError}`);
+        toast.error("Voice input failed. Please try again.");
       }
 
       setIsListening(false);
     };
 
     instance.onend = () => {
+      if (retryingRef.current) {
+        retryingRef.current = false;
+        return;
+      }
+
       setIsListening(false);
+      const transcript = finalTranscriptRef.current.trim();
+      if (transcript) {
+        onTranscriptRef.current(transcript);
+      }
+      finalTranscriptRef.current = "";
     };
 
     return instance;
@@ -121,16 +141,20 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       console.error("Failed to start speech recognition:", error);
 
       if (error?.name === "NotAllowedError") {
-        toast.error(`Permission denied. Error: ${error.name}`);
+        toast.error("Permission denied. Please allow microphone access and try again.");
       } else if (error?.name === "InvalidStateError") {
-        toast.error(`Microphone is already active. Error: ${error.name}`);
+        toast.error("Microphone is already active. Please wait a moment and try again.");
       } else {
-        toast.error(`Could not start voice input. Error: ${error?.name || "unknown"}`);
+        toast.error("Could not start voice input. Please try again.");
       }
 
       setIsListening(false);
     }
   }, [buildRecognition]);
+
+  useEffect(() => {
+    startWithLocaleRef.current = startWithLocale;
+  }, [startWithLocale]);
 
   useEffect(() => {
     return () => {
@@ -157,12 +181,15 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       return;
     }
 
+    // Start synchronously inside the click handler to keep the user-gesture chain
+    localeIndexRef.current = 0;
+    retryingRef.current = false;
+    finalTranscriptRef.current = "";
     const locales = languageLocales[language] || ["en-IN"];
-    const locale = locales[localeIndexRef.current] || locales[0];
     const languageName = languageNames[language] || "selected language";
 
-    toast.info(`Listening in ${languageName} (${locale})... Speak now`);
-    startWithLocale(locale);
+    toast.info(`Listening in ${languageName}... Speak now`);
+    startWithLocale(locales[0]);
   };
 
   return (
