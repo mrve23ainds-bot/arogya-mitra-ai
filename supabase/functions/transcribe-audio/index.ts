@@ -35,7 +35,8 @@ Deno.serve(async (req) => {
     }
 
     const langName = languageNames[language] || "the spoken language";
-    const prompt = `Transcribe the following audio of someone describing their health symptoms in ${langName}. Return ONLY the verbatim transcription text in ${langName} script, with no preamble, no quotes, no explanation. If unclear, return your best guess.`;
+    const prompt = `Transcribe the following audio of someone describing their health symptoms in ${langName}. Return ONLY the verbatim transcription text in ${langName} script, with no preamble, no quotes, no explanation. If the audio contains no human speech, return exactly: NO_SPEECH`;
+
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -45,19 +46,26 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        temperature: 0,
         messages: [
+          {
+            role: "system",
+            content:
+              "You are a strict speech-to-text engine. You only output the exact words spoken in the audio. You NEVER invent, guess, or fabricate words. If the audio contains no intelligible human speech (silence, noise, tones, music), you output exactly NO_SPEECH and nothing else.",
+          },
           {
             role: "user",
             content: [
               { type: "text", text: prompt },
               {
                 type: "input_audio",
-                input_audio: { data: audio, format: mimeType?.includes("wav") ? "wav" : "mp3" },
+                input_audio: { data: audio, format: "wav" },
               },
             ],
           },
         ],
       }),
+
     });
 
     if (!response.ok) {
@@ -82,7 +90,9 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    const transcript = data.choices?.[0]?.message?.content?.trim() || "";
+    let transcript = data.choices?.[0]?.message?.content?.trim() || "";
+    if (transcript === "NO_SPEECH" || transcript.includes("NO_SPEECH")) transcript = "";
+
 
     return new Response(JSON.stringify({ transcript }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
