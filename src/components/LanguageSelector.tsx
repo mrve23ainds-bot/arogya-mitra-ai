@@ -3,12 +3,12 @@ import { getTranslation, type Language } from "@/lib/translations";
 import { motion } from "framer-motion";
 
 const languages = [
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "hi", name: "हिंदी", flag: "🇮🇳" },
-  { code: "ta", name: "தமிழ்", flag: "🇮🇳" },
-  { code: "ml", name: "മലയാളം", flag: "🇮🇳" },
-  { code: "te", name: "తెలుగు", flag: "🇮🇳" },
-  { code: "kn", name: "ಕನ್ನಡ", flag: "🇮🇳" },
+  { code: "en", name: "English" },
+  { code: "hi", name: "हिंदी" },
+  { code: "ta", name: "தமிழ்" },
+  { code: "ml", name: "മലയാളം" },
+  { code: "te", name: "తెలుగు" },
+  { code: "kn", name: "ಕನ್ನಡ" },
 ];
 
 interface LanguageSelectorProps {
@@ -54,8 +54,7 @@ const LanguageSelector = ({ selectedLanguage, onLanguageChange }: LanguageSelect
                 transition={{ type: "spring", stiffness: 350, damping: 30 }}
               />
             )}
-            <span className="text-lg relative z-10">{lang.flag}</span>
-            <span className="text-[11px] font-semibold leading-tight relative z-10">{lang.name}</span>
+            <span className="text-xs font-semibold leading-tight relative z-10 py-1.5">{lang.name}</span>
           </motion.button>
         ))}
       </div>

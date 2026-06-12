@@ -11,7 +11,7 @@ interface VoiceInputProps {
 const languageLocales: Record<string, string[]> = {
   en: ["en-IN", "en-US", "en-GB"],
   hi: ["hi-IN", "hi"],
-  ta: ["ta-IN", "ta-LK", "ta"],
+  ta: ["ta-IN", "ta", "ta-LK"],
   ml: ["ml-IN", "ml"],
   te: ["te-IN", "te"],
   kn: ["kn-IN", "kn"],
@@ -33,6 +33,7 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
   const onTranscriptRef = useRef(onTranscript);
   const localeIndexRef = useRef(0);
   const retryingRef = useRef(false);
+  const startWithLocaleRef = useRef<(locale: string) => void>(() => {});
 
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
@@ -45,8 +46,8 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     if (!SpeechRecognition) return null;
 
     const instance = new SpeechRecognition();
-    instance.continuous = true;
-    instance.interimResults = true;
+    instance.continuous = false;
+    instance.interimResults = false;
     instance.maxAlternatives = 3;
     instance.lang = locale;
 
@@ -68,23 +69,32 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     instance.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error, "locale:", locale);
 
-      if (event.error === "language-not-supported") {
+      const isLocaleFailure =
+        event.error === "language-not-supported" || event.error === "service-not-allowed";
+
+      if (isLocaleFailure) {
         const locales = languageLocales[language] || ["en-IN"];
         if (localeIndexRef.current < locales.length - 1) {
+          // Automatically retry with the next locale — no re-tap needed
           localeIndexRef.current += 1;
           retryingRef.current = true;
-          setTimeout(() => startWithLocale(locales[localeIndexRef.current]), 120);
+          const nextLocale = locales[localeIndexRef.current];
+          try {
+            startWithLocaleRef.current(nextLocale);
+          } catch {
+            setIsListening(false);
+          }
           return;
         }
 
         toast.error(
-          `${languageNames[language] || "This language"} voice input is not supported on this device. Please type instead.`
+          `${languageNames[language] || "This language"} voice input isn't supported on this browser. Please type your symptoms instead.`
         );
         setIsListening(false);
         return;
       }
 
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+      if (event.error === "not-allowed") {
         toast.error("Microphone blocked. Please allow mic access in browser settings, then try again.");
       } else if (event.error === "no-speech") {
         toast.error("No speech detected. Please speak clearly and try again.");
@@ -125,7 +135,6 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       }
 
       recognitionRef.current = instance;
-      finalTranscriptRef.current = "";
       instance.start();
       setIsListening(true);
     } catch (error: any) {
@@ -143,43 +152,9 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     }
   }, [buildRecognition]);
 
-  const ensureMicrophoneAccess = useCallback(async () => {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error("Microphone access is not supported on this browser.");
-      return false;
-    }
-
-    try {
-      if (navigator.permissions) {
-        const status = await navigator.permissions.query({
-          name: "microphone" as PermissionName,
-        });
-
-        if (status.state === "denied") {
-          toast.error("Microphone blocked. Enable it in browser site settings and reload the page.");
-          return false;
-        }
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => track.stop());
-      return true;
-    } catch (error: any) {
-      console.error("Microphone permission error:", error);
-
-      if (error?.name === "NotAllowedError") {
-        toast.error("Permission denied. Please allow microphone access in browser settings.");
-      } else if (error?.name === "NotFoundError") {
-        toast.error("No microphone found on this device.");
-      } else if (error?.name === "NotReadableError") {
-        toast.error("Microphone is being used by another app. Close it and try again.");
-      } else {
-        toast.error("Unable to access microphone. Please try again.");
-      }
-
-      return false;
-    }
-  }, []);
+  useEffect(() => {
+    startWithLocaleRef.current = startWithLocale;
+  }, [startWithLocale]);
 
   useEffect(() => {
     return () => {
@@ -189,7 +164,7 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
     };
   }, []);
 
-  const toggleListening = async () => {
+  const toggleListening = () => {
     if (isListening) {
       try {
         recognitionRef.current?.stop();
@@ -206,10 +181,10 @@ const VoiceInput = ({ onTranscript, language }: VoiceInputProps) => {
       return;
     }
 
-    const hasMicAccess = await ensureMicrophoneAccess();
-    if (!hasMicAccess) return;
-
+    // Start synchronously inside the click handler to keep the user-gesture chain
     localeIndexRef.current = 0;
+    retryingRef.current = false;
+    finalTranscriptRef.current = "";
     const locales = languageLocales[language] || ["en-IN"];
     const languageName = languageNames[language] || "selected language";
 
