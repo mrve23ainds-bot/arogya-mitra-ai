@@ -52,8 +52,9 @@ Deno.serve(async (req) => {
               { type: "text", text: prompt },
               {
                 type: "input_audio",
-                input_audio: { data: audio, format: mimeType?.includes("wav") ? "wav" : "mp3" },
+                input_audio: { data: audio, format: "wav" },
               },
+
             ],
           },
         ],
