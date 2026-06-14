@@ -210,6 +210,37 @@ const Index = () => {
             </div>
           </motion.div>
 
+          {/* Data Sources transparency card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
+            className="mt-6 bg-card/60 backdrop-blur-md border border-border/40 rounded-2xl p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center shrink-0 mt-0.5">
+                <Info className="w-4 h-4 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {getTranslation(selectedLanguage as Language, "dataSources")}
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {getTranslation(selectedLanguage as Language, "aiPoweredBy")}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {getTranslation(selectedLanguage as Language, "nearbyDataFrom")}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {getTranslation(selectedLanguage as Language, "emergencyNumbersPublic")}
+                </p>
+                <p className="text-xs text-secondary-foreground/80 font-medium leading-relaxed pt-1 border-t border-border/30">
+                  {getTranslation(selectedLanguage as Language, "notADiagnosis")}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Footer */}
           <motion.div
             initial={{ opacity: 0 }}
