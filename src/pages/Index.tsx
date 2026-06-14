@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Sparkles, Activity, Shield, Stethoscope, MapPin, Phone } from "lucide-react";
+import { Heart, Sparkles, Activity, Shield, Stethoscope, MapPin, Phone, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSelector from "@/components/LanguageSelector";
 import SymptomChat from "@/components/SymptomChat";
