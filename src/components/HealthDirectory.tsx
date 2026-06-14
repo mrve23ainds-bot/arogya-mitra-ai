@@ -49,73 +49,91 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const { toast } = useToast();
 
   const fetchNearbyFacilities = async (coords: Coordinates) => {
-    try {
-      const radius = 5000; // 5km radius
-      const overpassQuery = `
-        [out:json][timeout:25];
-        (
-          node["amenity"="hospital"](around:${radius},${coords.latitude},${coords.longitude});
-          node["amenity"="clinic"](around:${radius},${coords.latitude},${coords.longitude});
-          node["amenity"="pharmacy"](around:${radius},${coords.latitude},${coords.longitude});
-          node["healthcare"="centre"](around:${radius},${coords.latitude},${coords.longitude});
-        );
-        out body;
-      `;
+    const radius = 10000; // 10km radius
+    const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
 
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: overpassQuery,
+    const endpoints = [
+      "https://overpass-api.de/api/interpreter",
+      "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass.openstreetmap.ru/api/interpreter",
+    ];
+
+    let data: any = null;
+    let lastError: any = null;
+    for (const url of endpoints) {
+      try {
+        const response = await fetch(`${url}?data=${encodeURIComponent(overpassQuery)}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        data = await response.json();
+        break;
+      } catch (err) {
+        lastError = err;
+        console.warn(`Overpass endpoint failed: ${url}`, err);
+      }
+    }
+
+    if (!data) {
+      console.error("All overpass endpoints failed:", lastError);
+      toast({
+        title: "Error",
+        description: "Could not fetch nearby facilities. Please check your internet and try again.",
+        variant: "destructive",
       });
+      setFacilitiesWithDistance([]);
+      return;
+    }
 
-      const data = await response.json();
-      const facilities: HealthFacility[] = data.elements.map((element: any, index: number) => {
+    try {
+      const facilities: HealthFacility[] = (data.elements || []).map((element: any, index: number) => {
+        const tags = element.tags || {};
+        const lat = element.lat ?? element.center?.lat;
+        const lon = element.lon ?? element.center?.lon;
+        if (lat == null || lon == null) return null;
+
         let type: HealthFacility["type"] = "Hospital";
         let services: string[] = [];
 
-        if (element.tags.amenity === "pharmacy") {
+        if (tags.amenity === "pharmacy" || tags.healthcare === "pharmacy") {
           type = "Medical Store";
           services = ["Medicines", "Health Products"];
-        } else if (element.tags.amenity === "hospital" || element.tags.healthcare === "centre") {
+        } else if (tags.amenity === "hospital") {
           type = "Hospital";
           services = ["General Medicine", "Emergency"];
-        } else if (element.tags.amenity === "clinic") {
+        } else if (tags.amenity === "clinic" || tags.healthcare === "clinic" || tags.amenity === "doctors") {
           type = "Hospital";
           services = ["Consultation", "Basic Care"];
+        } else if (tags.healthcare) {
+          type = "Hospital";
+          services = [tags.healthcare];
         }
 
-        const facilityCoords = { latitude: element.lat, longitude: element.lon };
+        const facilityCoords = { latitude: lat, longitude: lon };
         const distance = calculateDistance(coords, facilityCoords);
 
         return {
-          id: index,
-          name: element.tags.name || `${type} ${index + 1}`,
+          id: element.id ?? index,
+          name: tags.name || `${type} ${index + 1}`,
           type,
-          phone: element.tags.phone || element.tags["contact:phone"] || "N/A",
+          phone: tags.phone || tags["contact:phone"] || "N/A",
           services,
           available: true,
           coordinates: facilityCoords,
           distance: `${distance.toFixed(1)} ${getTranslation(language as Language, "km")}`,
-        };
-      });
+        } as HealthFacility;
+      }).filter(Boolean) as HealthFacility[];
 
-      const sortedFacilities = facilities.sort((a, b) => {
-        const distA = parseFloat(a.distance || "0");
-        const distB = parseFloat(b.distance || "0");
-        return distA - distB;
-      });
-
+      const sortedFacilities = facilities.sort((a, b) => parseFloat(a.distance || "0") - parseFloat(b.distance || "0"));
       setFacilitiesWithDistance(sortedFacilities);
-      
-      // Store in localStorage for chat access
+
       localStorage.setItem('nearbyHospitals', JSON.stringify(
         sortedFacilities.filter(f => f.type === "Hospital").slice(0, 5)
       ));
       localStorage.setItem('userLocation', JSON.stringify(coords));
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+      console.error("Error parsing facilities:", error);
       toast({
         title: "Error",
-        description: "Could not fetch nearby facilities. Please try again.",
+        description: "Could not parse nearby facilities.",
         variant: "destructive",
       });
     }
