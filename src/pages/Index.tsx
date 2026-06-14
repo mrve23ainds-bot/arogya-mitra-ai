@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Heart, Sparkles, Activity, Shield, Stethoscope } from "lucide-react";
+import { Heart, Sparkles, Activity, Shield, Stethoscope, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSelector from "@/components/LanguageSelector";
 import SymptomChat from "@/components/SymptomChat";
+import HealthDirectory from "@/components/HealthDirectory";
+import EmergencyContacts from "@/components/EmergencyContacts";
 import { getTranslation, type Language } from "@/lib/translations";
 import { motion } from "framer-motion";
 import medicalBg from "@/assets/medical-bg.jpg";
 
-type Screen = "welcome" | "chat";
+type Screen = "welcome" | "chat" | "directory" | "emergency";
 
 const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: number }) => (
   <motion.div
@@ -27,11 +29,18 @@ const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: numb
 );
 
 const Index = () => {
+  type Screen = "welcome" | "chat" | "directory" | "emergency";
   const [currentScreen, setCurrentScreen] = useState<Screen>("welcome");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
 
   if (currentScreen === "chat") {
     return <SymptomChat language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
+  }
+  if (currentScreen === "directory") {
+    return <HealthDirectory language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
+  }
+  if (currentScreen === "emergency") {
+    return <EmergencyContacts language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
   }
 
   return (
@@ -180,6 +189,25 @@ const Index = () => {
                 <span className="relative z-10">{getTranslation(selectedLanguage as Language, "checkSymptoms")}</span>
               </Button>
             </motion.div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Button
+                onClick={() => setCurrentScreen("directory")}
+                variant="outline"
+                className="h-12 rounded-2xl font-medium"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                {getTranslation(selectedLanguage as Language, "nearbyHealthcare")}
+              </Button>
+              <Button
+                onClick={() => setCurrentScreen("emergency")}
+                variant="destructive"
+                className="h-12 rounded-2xl font-medium"
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {getTranslation(selectedLanguage as Language, "emergency")}
+              </Button>
+            </div>
           </motion.div>
 
           {/* Footer */}
