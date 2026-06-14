@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Heart, Sparkles, Activity, Shield, Stethoscope } from "lucide-react";
+import { Heart, Sparkles, Activity, Shield, Stethoscope, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSelector from "@/components/LanguageSelector";
 import SymptomChat from "@/components/SymptomChat";
+import HealthDirectory from "@/components/HealthDirectory";
+import EmergencyContacts from "@/components/EmergencyContacts";
 import { getTranslation, type Language } from "@/lib/translations";
 import { motion } from "framer-motion";
 import medicalBg from "@/assets/medical-bg.jpg";
 
-type Screen = "welcome" | "chat";
+type Screen = "welcome" | "chat" | "directory" | "emergency";
 
 const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: number }) => (
   <motion.div
