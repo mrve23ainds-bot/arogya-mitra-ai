@@ -29,11 +29,18 @@ const FloatingOrb = ({ className, delay = 0 }: { className: string; delay?: numb
 );
 
 const Index = () => {
+  type Screen = "welcome" | "chat" | "directory" | "emergency";
   const [currentScreen, setCurrentScreen] = useState<Screen>("welcome");
   const [selectedLanguage, setSelectedLanguage] = useState("en");
 
   if (currentScreen === "chat") {
     return <SymptomChat language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
+  }
+  if (currentScreen === "directory") {
+    return <HealthDirectory language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
+  }
+  if (currentScreen === "emergency") {
+    return <EmergencyContacts language={selectedLanguage} onBack={() => setCurrentScreen("welcome")} />;
   }
 
   return (
