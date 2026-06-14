@@ -189,6 +189,25 @@ const Index = () => {
                 <span className="relative z-10">{getTranslation(selectedLanguage as Language, "checkSymptoms")}</span>
               </Button>
             </motion.div>
+
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <Button
+                onClick={() => setCurrentScreen("directory")}
+                variant="outline"
+                className="h-12 rounded-2xl font-medium"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                {getTranslation(selectedLanguage as Language, "nearbyHealthcare")}
+              </Button>
+              <Button
+                onClick={() => setCurrentScreen("emergency")}
+                variant="destructive"
+                className="h-12 rounded-2xl font-medium"
+              >
+                <Phone className="mr-2 h-4 w-4" />
+                {getTranslation(selectedLanguage as Language, "emergency")}
+              </Button>
+            </div>
           </motion.div>
 
           {/* Footer */}
