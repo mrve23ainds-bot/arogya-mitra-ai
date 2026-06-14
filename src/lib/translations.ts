@@ -34,6 +34,11 @@ export const translations = {
     locationError: "Location Error",
     locationErrorDesc: "Unable to detect your location. Please enable location services.",
     locationNotSupported: "Location services not supported",
+    dataSources: "Data Sources",
+    aiPoweredBy: "AI health advice powered by Google Gemini, based on WHO & standard medical guidelines.",
+    nearbyDataFrom: "Nearby hospitals & pharmacies from OpenStreetMap (public map data).",
+    emergencyNumbersPublic: "Emergency numbers are official government helplines.",
+    notADiagnosis: "This is general guidance, not a medical diagnosis. Consult a doctor for serious symptoms.",
   },
   hi: {
     appName: "एआई स्वास्थ्य सहायक",
