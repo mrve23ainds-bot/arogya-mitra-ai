@@ -321,10 +321,13 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
                 </TabsContent>
 
 
-            <TabsContent value="asha" className="space-y-3">
-              {getFilteredFacilities("ASHA Worker").map(renderFacilityCard)}
-            </TabsContent>
+                <TabsContent value="asha" className="space-y-3">
+                  {getFilteredFacilities("ASHA Worker").map(renderFacilityCard)}
+                </TabsContent>
+              </>
+            )}
           </Tabs>
+
         )}
       </div>
     </div>
