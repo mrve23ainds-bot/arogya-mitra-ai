@@ -70,7 +70,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
 
 
     if (!data) {
-      console.error("All overpass endpoints failed:", lastError);
+      console.error("Nearby facilities fetch failed");
       toast({
         title: "Error",
         description: "Could not fetch nearby facilities. Please check your internet and try again.",
