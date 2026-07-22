@@ -50,6 +50,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const { toast } = useToast();
 
   const fetchNearbyFacilities = async (coords: Coordinates) => {
+    setIsLoadingFacilities(true);
     const radius = 10000; // 10km radius
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
 
