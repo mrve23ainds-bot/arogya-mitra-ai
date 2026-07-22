@@ -145,6 +145,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         description: "Could not parse nearby facilities.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingFacilities(false);
     }
   };
 
