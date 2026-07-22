@@ -88,6 +88,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         variant: "destructive",
       });
       setFacilitiesWithDistance([]);
+      setIsLoadingFacilities(false);
       return;
     }
 
