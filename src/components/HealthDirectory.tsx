@@ -46,6 +46,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [facilitiesWithDistance, setFacilitiesWithDistance] = useState<HealthFacility[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
   const { toast } = useToast();
 
   const fetchNearbyFacilities = async (coords: Coordinates) => {
