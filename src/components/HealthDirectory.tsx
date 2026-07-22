@@ -46,9 +46,11 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [facilitiesWithDistance, setFacilitiesWithDistance] = useState<HealthFacility[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
   const { toast } = useToast();
 
   const fetchNearbyFacilities = async (coords: Coordinates) => {
+    setIsLoadingFacilities(true);
     const radius = 10000; // 10km radius
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
 
@@ -86,6 +88,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         variant: "destructive",
       });
       setFacilitiesWithDistance([]);
+      setIsLoadingFacilities(false);
       return;
     }
 
@@ -142,6 +145,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         description: "Could not parse nearby facilities.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingFacilities(false);
     }
   };
 
@@ -300,18 +305,29 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="hospitals" className="space-y-3">
-              {getFilteredFacilities("Hospital").map(renderFacilityCard)}
-            </TabsContent>
+            {isLoadingFacilities ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-3 text-muted-foreground">Loading nearby facilities…</span>
+              </div>
+            ) : (
+              <>
+                <TabsContent value="hospitals" className="space-y-3">
+                  {getFilteredFacilities("Hospital").map(renderFacilityCard)}
+                </TabsContent>
 
-            <TabsContent value="stores" className="space-y-3">
-              {getFilteredFacilities("Medical Store").map(renderFacilityCard)}
-            </TabsContent>
+                <TabsContent value="stores" className="space-y-3">
+                  {getFilteredFacilities("Medical Store").map(renderFacilityCard)}
+                </TabsContent>
 
-            <TabsContent value="asha" className="space-y-3">
-              {getFilteredFacilities("ASHA Worker").map(renderFacilityCard)}
-            </TabsContent>
+
+                <TabsContent value="asha" className="space-y-3">
+                  {getFilteredFacilities("ASHA Worker").map(renderFacilityCard)}
+                </TabsContent>
+              </>
+            )}
           </Tabs>
+
         )}
       </div>
     </div>
