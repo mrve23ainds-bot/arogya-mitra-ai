@@ -305,13 +305,21 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="hospitals" className="space-y-3">
-              {getFilteredFacilities("Hospital").map(renderFacilityCard)}
-            </TabsContent>
+            {isLoadingFacilities ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-3 text-muted-foreground">Loading nearby facilities…</span>
+              </div>
+            ) : (
+              <>
+                <TabsContent value="hospitals" className="space-y-3">
+                  {getFilteredFacilities("Hospital").map(renderFacilityCard)}
+                </TabsContent>
 
-            <TabsContent value="stores" className="space-y-3">
-              {getFilteredFacilities("Medical Store").map(renderFacilityCard)}
-            </TabsContent>
+                <TabsContent value="stores" className="space-y-3">
+                  {getFilteredFacilities("Medical Store").map(renderFacilityCard)}
+                </TabsContent>
+
 
             <TabsContent value="asha" className="space-y-3">
               {getFilteredFacilities("ASHA Worker").map(renderFacilityCard)}
