@@ -53,16 +53,22 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
 
     const endpoints = [
-      "https://overpass-api.de/api/interpreter",
       "https://overpass.kumi.systems/api/interpreter",
+      "https://overpass-api.de/api/interpreter",
       "https://overpass.openstreetmap.ru/api/interpreter",
     ];
+
+    const fetchWithTimeout = (url: string, ms: number) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), ms);
+      return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+    };
 
     let data: any = null;
     let lastError: any = null;
     for (const url of endpoints) {
       try {
-        const response = await fetch(`${url}?data=${encodeURIComponent(overpassQuery)}`);
+        const response = await fetchWithTimeout(`${url}?data=${encodeURIComponent(overpassQuery)}`, 15000);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         data = await response.json();
         break;
@@ -148,8 +154,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
             longitude: position.coords.longitude,
           };
           setUserLocation(coords);
-          await fetchNearbyFacilities(coords);
           setIsLoadingLocation(false);
+          await fetchNearbyFacilities(coords);
         },
         (error) => {
           console.error("Geolocation error:", error);
@@ -160,7 +166,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
             description: getTranslation(language as Language, "locationErrorDesc"),
             variant: "destructive",
           });
-        }
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     } else {
       setFacilitiesWithDistance([]);
