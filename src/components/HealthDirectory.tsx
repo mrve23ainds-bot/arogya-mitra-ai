@@ -58,12 +58,11 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data: fnData, error } = await supabase.functions.invoke("nearby-facilities", {
-        method: "GET",
-        // @ts-ignore - query is supported
-        query: { lat: String(coords.latitude), lon: String(coords.longitude), radius: "10000" },
+        body: { lat: coords.latitude, lon: coords.longitude, radius: 10000 },
       });
       if (error) throw error;
       data = fnData;
+
     } catch (err) {
       console.error("nearby-facilities failed:", err);
     }
