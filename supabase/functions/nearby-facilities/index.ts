@@ -8,9 +8,18 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const lat = parseFloat(url.searchParams.get("lat") || "");
-    const lon = parseFloat(url.searchParams.get("lon") || "");
-    const radius = parseInt(url.searchParams.get("radius") || "10000");
+    let lat = parseFloat(url.searchParams.get("lat") || "");
+    let lon = parseFloat(url.searchParams.get("lon") || "");
+    let radius = parseInt(url.searchParams.get("radius") || "10000");
+
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        if (body?.lat != null) lat = Number(body.lat);
+        if (body?.lon != null) lon = Number(body.lon);
+        if (body?.radius != null) radius = Number(body.radius);
+      } catch (_) { /* ignore */ }
+    }
 
     if (isNaN(lat) || isNaN(lon)) {
       return new Response(JSON.stringify({ error: "lat/lon required" }), {
