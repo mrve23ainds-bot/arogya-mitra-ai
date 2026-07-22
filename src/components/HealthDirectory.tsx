@@ -154,8 +154,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
             longitude: position.coords.longitude,
           };
           setUserLocation(coords);
-          await fetchNearbyFacilities(coords);
           setIsLoadingLocation(false);
+          await fetchNearbyFacilities(coords);
         },
         (error) => {
           console.error("Geolocation error:", error);
@@ -166,7 +166,8 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
             description: getTranslation(language as Language, "locationErrorDesc"),
             variant: "destructive",
           });
-        }
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     } else {
       setFacilitiesWithDistance([]);
