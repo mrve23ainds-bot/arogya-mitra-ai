@@ -54,31 +54,20 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
     const radius = 10000; // 10km radius
     const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
 
-    const endpoints = [
-      "https://overpass.kumi.systems/api/interpreter",
-      "https://overpass-api.de/api/interpreter",
-      "https://overpass.openstreetmap.ru/api/interpreter",
-    ];
-
-    const fetchWithTimeout = (url: string, ms: number) => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), ms);
-      return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
-    };
-
     let data: any = null;
-    let lastError: any = null;
-    for (const url of endpoints) {
-      try {
-        const response = await fetchWithTimeout(`${url}?data=${encodeURIComponent(overpassQuery)}`, 15000);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        data = await response.json();
-        break;
-      } catch (err) {
-        lastError = err;
-        console.warn(`Overpass endpoint failed: ${url}`, err);
-      }
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: fnData, error } = await supabase.functions.invoke("nearby-facilities", {
+        method: "GET",
+        // @ts-ignore - query is supported
+        query: { lat: String(coords.latitude), lon: String(coords.longitude), radius: "10000" },
+      });
+      if (error) throw error;
+      data = fnData;
+    } catch (err) {
+      console.error("nearby-facilities failed:", err);
     }
+
 
     if (!data) {
       console.error("All overpass endpoints failed:", lastError);
