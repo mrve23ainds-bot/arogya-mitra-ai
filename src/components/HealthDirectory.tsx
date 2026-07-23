@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getTranslation, type Language } from "@/lib/translations";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,6 +30,276 @@ interface HealthFacility {
   coordinates: Coordinates;
 }
 
+interface BangaloreArea {
+  id: string;
+  name: string;
+  coordinates: Coordinates;
+  facilities: Omit<HealthFacility, "distance">[];
+}
+
+const bangaloreAreas: BangaloreArea[] = [
+  {
+    id: "marathahalli",
+    name: "Marathahalli",
+    coordinates: { latitude: 12.9569, longitude: 77.7011 },
+    facilities: [
+      {
+        id: 1001,
+        name: "Sakra World Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9322, longitude: 77.6851 },
+      },
+      {
+        id: 1002,
+        name: "VIMS Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Consultation"],
+        available: true,
+        coordinates: { latitude: 12.9564, longitude: 77.7151 },
+      },
+      {
+        id: 1003,
+        name: "Apollo Clinic Marathahalli",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Clinic", "Basic Care"],
+        available: true,
+        coordinates: { latitude: 12.9592, longitude: 77.6974 },
+      },
+      {
+        id: 1004,
+        name: "MedPlus Marathahalli",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Health Products"],
+        available: true,
+        coordinates: { latitude: 12.9562, longitude: 77.7018 },
+      },
+      {
+        id: 1005,
+        name: "Apollo Pharmacy Marathahalli",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Pharmacy"],
+        available: true,
+        coordinates: { latitude: 12.9584, longitude: 77.7001 },
+      },
+    ],
+  },
+  {
+    id: "whitefield",
+    name: "Whitefield",
+    coordinates: { latitude: 12.9698, longitude: 77.7500 },
+    facilities: [
+      {
+        id: 2001,
+        name: "Manipal Hospital Whitefield",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9866, longitude: 77.7281 },
+      },
+      {
+        id: 2002,
+        name: "Vydehi Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Specialist Care"],
+        available: true,
+        coordinates: { latitude: 12.9760, longitude: 77.7286 },
+      },
+      {
+        id: 2003,
+        name: "Aster Whitefield Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9952, longitude: 77.7611 },
+      },
+      {
+        id: 2004,
+        name: "Apollo Pharmacy Whitefield",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Pharmacy"],
+        available: true,
+        coordinates: { latitude: 12.9691, longitude: 77.7498 },
+      },
+      {
+        id: 2005,
+        name: "MedPlus Whitefield",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Health Products"],
+        available: true,
+        coordinates: { latitude: 12.9712, longitude: 77.7510 },
+      },
+    ],
+  },
+  {
+    id: "indiranagar",
+    name: "Indiranagar",
+    coordinates: { latitude: 12.9784, longitude: 77.6408 },
+    facilities: [
+      {
+        id: 3001,
+        name: "Chinmaya Mission Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9804, longitude: 77.6486 },
+      },
+      {
+        id: 3002,
+        name: "Cloudnine Hospital Old Airport Road",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Specialist Care"],
+        available: true,
+        coordinates: { latitude: 12.9592, longitude: 77.6489 },
+      },
+      {
+        id: 3003,
+        name: "Manipal Hospital Old Airport Road",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9581, longitude: 77.6488 },
+      },
+      {
+        id: 3004,
+        name: "Apollo Pharmacy Indiranagar",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Pharmacy"],
+        available: true,
+        coordinates: { latitude: 12.9788, longitude: 77.6414 },
+      },
+      {
+        id: 3005,
+        name: "MedPlus Indiranagar",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Health Products"],
+        available: true,
+        coordinates: { latitude: 12.9775, longitude: 77.6389 },
+      },
+    ],
+  },
+  {
+    id: "koramangala",
+    name: "Koramangala",
+    coordinates: { latitude: 12.9352, longitude: 77.6245 },
+    facilities: [
+      {
+        id: 4001,
+        name: "St. John’s Medical College Hospital",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9295, longitude: 77.6192 },
+      },
+      {
+        id: 4002,
+        name: "Apollo Spectra Hospital Koramangala",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Specialist Care"],
+        available: true,
+        coordinates: { latitude: 12.9347, longitude: 77.6169 },
+      },
+      {
+        id: 4003,
+        name: "Ayu Health Hospital Koramangala",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Consultation"],
+        available: true,
+        coordinates: { latitude: 12.9366, longitude: 77.6267 },
+      },
+      {
+        id: 4004,
+        name: "Apollo Pharmacy Koramangala",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Pharmacy"],
+        available: true,
+        coordinates: { latitude: 12.9359, longitude: 77.6240 },
+      },
+      {
+        id: 4005,
+        name: "MedPlus Koramangala",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Health Products"],
+        available: true,
+        coordinates: { latitude: 12.9340, longitude: 77.6261 },
+      },
+    ],
+  },
+  {
+    id: "jayanagar",
+    name: "Jayanagar",
+    coordinates: { latitude: 12.9299, longitude: 77.5933 },
+    facilities: [
+      {
+        id: 5001,
+        name: "Sagar Hospitals Jayanagar",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Emergency Care"],
+        available: true,
+        coordinates: { latitude: 12.9246, longitude: 77.5907 },
+      },
+      {
+        id: 5002,
+        name: "Manipal Hospital Jayanagar",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Specialist Care"],
+        available: true,
+        coordinates: { latitude: 12.9291, longitude: 77.5863 },
+      },
+      {
+        id: 5003,
+        name: "Apollo Speciality Hospital Jayanagar",
+        type: "Hospital",
+        phone: "N/A",
+        services: ["Hospital", "Consultation"],
+        available: true,
+        coordinates: { latitude: 12.9306, longitude: 77.5837 },
+      },
+      {
+        id: 5004,
+        name: "Apollo Pharmacy Jayanagar",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Pharmacy"],
+        available: true,
+        coordinates: { latitude: 12.9308, longitude: 77.5937 },
+      },
+      {
+        id: 5005,
+        name: "MedPlus Jayanagar",
+        type: "Medical Store",
+        phone: "N/A",
+        services: ["Medicines", "Health Products"],
+        available: true,
+        coordinates: { latitude: 12.9288, longitude: 77.5948 },
+      },
+    ],
+  },
+];
+
 const calculateDistance = (coord1: Coordinates, coord2: Coordinates): number => {
   const R = 6371;
   const dLat = (coord2.latitude - coord1.latitude) * Math.PI / 180;
@@ -47,13 +318,35 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
   const [facilitiesWithDistance, setFacilitiesWithDistance] = useState<HealthFacility[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [isLoadingFacilities, setIsLoadingFacilities] = useState(false);
+  const [selectedAreaId, setSelectedAreaId] = useState("marathahalli");
+  const [dataMode, setDataMode] = useState<"live" | "area">("live");
   const { toast } = useToast();
+
+  const applyAreaFacilities = (areaId: string) => {
+    const area = bangaloreAreas.find((item) => item.id === areaId) || bangaloreAreas[0];
+    setSelectedAreaId(area.id);
+    setUserLocation(area.coordinates);
+    setDataMode("area");
+
+    const facilities = area.facilities
+      .map((facility) => {
+        const distance = calculateDistance(area.coordinates, facility.coordinates);
+        return {
+          ...facility,
+          distance: `${distance.toFixed(1)} ${getTranslation(language as Language, "km")}`,
+        };
+      })
+      .sort((a, b) => parseFloat(a.distance || "0") - parseFloat(b.distance || "0"));
+
+    setFacilitiesWithDistance(facilities);
+    setIsLoadingLocation(false);
+    setIsLoadingFacilities(false);
+    localStorage.setItem("nearbyHospitals", JSON.stringify(facilities.filter((f) => f.type === "Hospital").slice(0, 5)));
+    localStorage.setItem("userLocation", JSON.stringify(area.coordinates));
+  };
 
   const fetchNearbyFacilities = async (coords: Coordinates) => {
     setIsLoadingFacilities(true);
-    const radius = 10000; // 10km radius
-    const overpassQuery = `[out:json][timeout:25];(node["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});way["amenity"~"hospital|clinic|pharmacy|doctors"](around:${radius},${coords.latitude},${coords.longitude});node["healthcare"](around:${radius},${coords.latitude},${coords.longitude}););out center;`;
-
     let data: any = null;
     try {
       const { supabase } = await import("@/integrations/supabase/client");
@@ -71,12 +364,10 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
     if (!data) {
       console.error("Nearby facilities fetch failed");
       toast({
-        title: "Error",
-        description: "Could not fetch nearby facilities. Please check your internet and try again.",
-        variant: "destructive",
+        title: "Showing Bangalore area list",
+        description: "Live location hospitals did not load, so choose an area below.",
       });
-      setFacilitiesWithDistance([]);
-      setIsLoadingFacilities(false);
+      applyAreaFacilities(selectedAreaId);
       return;
     }
 
@@ -120,6 +411,16 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
       }).filter(Boolean) as HealthFacility[];
 
       const sortedFacilities = facilities.sort((a, b) => parseFloat(a.distance || "0") - parseFloat(b.distance || "0"));
+      if (sortedFacilities.length === 0) {
+        toast({
+          title: "Showing Bangalore area list",
+          description: "No live facilities were found near this location, so choose an area below.",
+        });
+        applyAreaFacilities(selectedAreaId);
+        return;
+      }
+
+      setDataMode("live");
       setFacilitiesWithDistance(sortedFacilities);
 
       localStorage.setItem('nearbyHospitals', JSON.stringify(
@@ -152,26 +453,26 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          setFacilitiesWithDistance([]);
-          setIsLoadingLocation(false);
+          applyAreaFacilities(selectedAreaId);
           toast({
             title: getTranslation(language as Language, "locationError"),
-            description: getTranslation(language as Language, "locationErrorDesc"),
-            variant: "destructive",
+            description: "Choose a Bangalore area below to see hospitals and medical stores.",
           });
         },
         { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
       );
     } else {
-      setFacilitiesWithDistance([]);
-      setIsLoadingLocation(false);
+      applyAreaFacilities(selectedAreaId);
       toast({
         title: getTranslation(language as Language, "locationError"),
-        description: getTranslation(language as Language, "locationNotSupported"),
-        variant: "destructive",
+        description: "Choose a Bangalore area below to see hospitals and medical stores.",
       });
     }
   }, [language, toast]);
+
+  const handleAreaChange = (areaId: string) => {
+    applyAreaFacilities(areaId);
+  };
 
   const getFilteredFacilities = (type: HealthFacility["type"]) => {
     return facilitiesWithDistance
@@ -272,6 +573,57 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
       </div>
 
       <div className="p-4">
+        <div className="mb-4 space-y-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              variant={dataMode === "live" ? "default" : "outline"}
+              onClick={() => {
+                if (!userLocation || dataMode === "area") {
+                  setIsLoadingLocation(true);
+                  if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                      async (position) => {
+                        const coords = {
+                          latitude: position.coords.latitude,
+                          longitude: position.coords.longitude,
+                        };
+                        setUserLocation(coords);
+                        setIsLoadingLocation(false);
+                        await fetchNearbyFacilities(coords);
+                      },
+                      () => applyAreaFacilities(selectedAreaId),
+                      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+                    );
+                  } else {
+                    applyAreaFacilities(selectedAreaId);
+                  }
+                } else {
+                  fetchNearbyFacilities(userLocation);
+                }
+              }}
+              className="w-full sm:w-auto"
+            >
+              Use my location
+            </Button>
+            <Select value={selectedAreaId} onValueChange={handleAreaChange}>
+              <SelectTrigger className="h-10 w-full sm:max-w-xs">
+                <SelectValue placeholder="Choose Bangalore area" />
+              </SelectTrigger>
+              <SelectContent>
+                {bangaloreAreas.map((area) => (
+                  <SelectItem key={area.id} value={area.id}>
+                    {area.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {dataMode === "area" && (
+            <p className="text-sm text-muted-foreground">
+              Showing saved Bangalore area results. Select your area if live location does not load.
+            </p>
+          )}
+        </div>
         {isLoadingLocation ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -301,11 +653,19 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
             ) : (
               <>
                 <TabsContent value="hospitals" className="space-y-3">
-                  {getFilteredFacilities("Hospital").map(renderFacilityCard)}
+                  {getFilteredFacilities("Hospital").length > 0 ? (
+                    getFilteredFacilities("Hospital").map(renderFacilityCard)
+                  ) : (
+                    <p className="py-6 text-center text-sm text-muted-foreground">No hospitals found for this search.</p>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="stores" className="space-y-3">
-                  {getFilteredFacilities("Medical Store").map(renderFacilityCard)}
+                  {getFilteredFacilities("Medical Store").length > 0 ? (
+                    getFilteredFacilities("Medical Store").map(renderFacilityCard)
+                  ) : (
+                    <p className="py-6 text-center text-sm text-muted-foreground">No medical stores found for this search.</p>
+                  )}
                 </TabsContent>
 
 
