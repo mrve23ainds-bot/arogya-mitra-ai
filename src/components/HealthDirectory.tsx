@@ -310,7 +310,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
-            {f.distanceKm.toFixed(1)} {getTranslation(language as Language, "km")} from {area.name}
+            {f.distanceKm.toFixed(1)} {getTranslation(language as Language, "km")} from {getAreaName(area.id, language)}
           </span>
         </div>
       </div>
