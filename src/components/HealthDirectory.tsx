@@ -204,6 +204,40 @@ const bangaloreAreas: BangaloreArea[] = [
   },
 ];
 
+const areaNameTranslations: Record<string, Record<string, string>> = {
+  marathahalli: { en: "Marathahalli", hi: "मराठाहल्ली", ta: "மராத்தஹள்ளி", te: "మారతహళ్లి", kn: "ಮರಾಠಹಳ್ಳಿ", ml: "മരാത്തഹള്ളി" },
+  whitefield: { en: "Whitefield", hi: "व्हाइटफील्ड", ta: "வொயிட்பீல்டு", te: "వైట్‌ఫీల్డ్", kn: "ವೈಟ್‌ಫೀಲ್ಡ್", ml: "വൈറ്റ്ഫീൽഡ്" },
+  indiranagar: { en: "Indiranagar", hi: "इंदिरानगर", ta: "இந்திராநகர்", te: "ఇందిరానగర్", kn: "ಇಂದಿರಾನಗರ", ml: "ഇന്ദിരാനഗർ" },
+  koramangala: { en: "Koramangala", hi: "कोरमंगला", ta: "கோரமங்கலா", te: "కోరమంగళ", kn: "ಕೋರಮಂಗಲ", ml: "കോറമംഗല" },
+  jayanagar: { en: "Jayanagar", hi: "जयनगर", ta: "ஜெயநகர்", te: "జయనగర్", kn: "ಜಯನಗರ", ml: "ജയനഗർ" },
+  "hsr-layout": { en: "HSR Layout", hi: "एचएसआर लेआउट", ta: "எச்.எஸ்.ஆர். லேஅவுட்", te: "హెచ్‌ఎస్‌ఆర్ లేఅవుట్", kn: "ಎಚ್‌ಎಸ್‌ಆರ್ ಲೇಔಟ್", ml: "എച്ച്എസ്ആർ ലേഔട്ട്" },
+  "electronic-city": { en: "Electronic City", hi: "इलेक्ट्रॉनिक सिटी", ta: "எலக்ட்ரானிக் சிட்டி", te: "ఎలక్ట్రానిక్ సిటీ", kn: "ಎಲೆಕ್ಟ್ರಾನಿಕ್ ಸಿಟಿ", ml: "ഇലക്ട്രോണിക് സിറ്റി" },
+  malleshwaram: { en: "Malleshwaram", hi: "मल्लेश्वरम", ta: "மல்லேஸ்வரம்", te: "మల్లేశ్వరం", kn: "ಮಲ್ಲೇಶ್ವರಂ", ml: "മല്ലേശ്വരം" },
+  "jp-nagar": { en: "JP Nagar", hi: "जेपी नगर", ta: "ஜே.பி. நகர்", te: "జేపీ నగర్", kn: "ಜೆಪಿ ನಗರ", ml: "ജെപി നഗർ" },
+  hebbal: { en: "Hebbal", hi: "हेब्बल", ta: "ஹெப்பால்", te: "హెబ్బాళ్", kn: "ಹೆಬ್ಬಾಳ", ml: "ഹെബ്ബാൾ" },
+};
+
+const chooseAreaLabels: Record<string, string> = {
+  en: "Choose your area in Bangalore",
+  hi: "बैंगलोर में अपना क्षेत्र चुनें",
+  ta: "பெங்களூரில் உங்கள் பகுதியைத் தேர்ந்தெடுக்கவும்",
+  te: "బెంగళూరులో మీ ప్రాంతాన్ని ఎంచుకోండి",
+  kn: "ಬೆಂಗಳೂರಿನಲ್ಲಿ ನಿಮ್ಮ ಪ್ರದೇಶವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+  ml: "ബംഗളൂരുവിലെ നിങ്ങളുടെ പ്രദേശം തിരഞ്ഞെടുക്കുക",
+};
+
+const showingInLabels: Record<string, (area: string) => string> = {
+  en: (a) => `Showing hospitals and medical stores in ${a}. Distances are measured from the ${a} centre.`,
+  hi: (a) => `${a} में अस्पताल और मेडिकल स्टोर दिखाए जा रहे हैं। दूरी ${a} केंद्र से मापी गई है।`,
+  ta: (a) => `${a} இல் உள்ள மருத்துவமனைகள் மற்றும் மருந்தகங்கள் காட்டப்படுகின்றன. தூரங்கள் ${a} மையத்திலிருந்து அளவிடப்படுகின்றன.`,
+  te: (a) => `${a}లో ఆసుపత్రులు మరియు మెడికల్ స్టోర్లు చూపబడుతున్నాయి. దూరాలు ${a} కేంద్రం నుండి కొలవబడతాయి.`,
+  kn: (a) => `${a} ನಲ್ಲಿನ ಆಸ್ಪತ್ರೆಗಳು ಮತ್ತು ಮೆಡಿಕಲ್ ಸ್ಟೋರ್‌ಗಳನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ. ದೂರವನ್ನು ${a} ಕೇಂದ್ರದಿಂದ ಅಳೆಯಲಾಗುತ್ತದೆ.`,
+  ml: (a) => `${a}-ലെ ആശുപത്രികളും മെഡിക്കൽ സ്റ്റോറുകളും കാണിക്കുന്നു. ദൂരം ${a} കേന്ദ്രത്തിൽ നിന്ന് അളക്കുന്നു.`,
+};
+
+const getAreaName = (id: string, lang: string) =>
+  areaNameTranslations[id]?.[lang] || areaNameTranslations[id]?.en || id;
+
 const calculateDistance = (a: Coordinates, b: Coordinates): number => {
   const R = 6371;
   const dLat = (b.latitude - a.latitude) * Math.PI / 180;
@@ -276,7 +310,7 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
-            {f.distanceKm.toFixed(1)} {getTranslation(language as Language, "km")} from {area.name}
+            {f.distanceKm.toFixed(1)} {getTranslation(language as Language, "km")} from {getAreaName(area.id, language)}
           </span>
         </div>
       </div>
@@ -326,19 +360,21 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
 
       <div className="p-4">
         <div className="mb-4">
-          <label className="text-sm font-medium mb-2 block">Choose your area in Bangalore</label>
+          <label className="text-sm font-medium mb-2 block">
+            {chooseAreaLabels[language] || chooseAreaLabels.en}
+          </label>
           <Select value={selectedAreaId} onValueChange={setSelectedAreaId}>
             <SelectTrigger className="h-11 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {bangaloreAreas.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                <SelectItem key={a.id} value={a.id}>{getAreaName(a.id, language)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground mt-2">
-            Showing hospitals and medical stores in {area.name}. Distances are measured from the {area.name} centre.
+            {(showingInLabels[language] || showingInLabels.en)(getAreaName(area.id, language))}
           </p>
         </div>
 
