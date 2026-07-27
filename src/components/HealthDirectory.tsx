@@ -360,19 +360,21 @@ const HealthDirectory = ({ onBack, language = "en" }: HealthDirectoryProps) => {
 
       <div className="p-4">
         <div className="mb-4">
-          <label className="text-sm font-medium mb-2 block">Choose your area in Bangalore</label>
+          <label className="text-sm font-medium mb-2 block">
+            {chooseAreaLabels[language] || chooseAreaLabels.en}
+          </label>
           <Select value={selectedAreaId} onValueChange={setSelectedAreaId}>
             <SelectTrigger className="h-11 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {bangaloreAreas.map((a) => (
-                <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                <SelectItem key={a.id} value={a.id}>{getAreaName(a.id, language)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground mt-2">
-            Showing hospitals and medical stores in {area.name}. Distances are measured from the {area.name} centre.
+            {(showingInLabels[language] || showingInLabels.en)(getAreaName(area.id, language))}
           </p>
         </div>
 
